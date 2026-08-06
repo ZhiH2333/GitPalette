@@ -14,8 +14,6 @@ enum L10nKey: String, Sendable {
     case tabLanguage
     case sectionAppearance
     case launcherStyle
-    case appearanceHintLiquidAvailable
-    case appearanceHintLiquidUnavailable
     case sectionCopyFormat
     case format
     case template
@@ -92,8 +90,6 @@ enum L10n {
         .tabLanguage: "Language",
         .sectionAppearance: "Appearance",
         .launcherStyle: "Launcher style",
-        .appearanceHintLiquidAvailable: "Automatic uses Liquid Glass on macOS 26 and frosted glass on older systems. You can also lock a style.",
-        .appearanceHintLiquidUnavailable: "This system does not support Liquid Glass; choosing it falls back to frosted glass. Upgrade to macOS 26 for Liquid Glass.",
         .sectionCopyFormat: "Copy format",
         .format: "Format",
         .template: "Template",
@@ -158,8 +154,6 @@ enum L10n {
         .tabLanguage: "语言",
         .sectionAppearance: "外观",
         .launcherStyle: "启动器风格",
-        .appearanceHintLiquidAvailable: "自动：在 macOS 26 使用液态玻璃，更低系统使用毛玻璃。也可手动固定风格。",
-        .appearanceHintLiquidUnavailable: "当前系统不支持液态玻璃；选择「液态玻璃」时会回退为毛玻璃。升级到 macOS 26 后可使用液态玻璃。",
         .sectionCopyFormat: "复制格式",
         .format: "格式",
         .template: "模板",

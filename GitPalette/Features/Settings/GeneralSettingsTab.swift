@@ -14,17 +14,15 @@ struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
-            Section(preferences.t(.sectionAppearance)) {
-                Picker(preferences.t(.launcherStyle), selection: $preferences.appearanceStyle) {
-                    ForEach(AppearanceStyle.allCases) { style in
-                        Text(style.displayName(language: preferences.uiLanguage)).tag(style)
+            if AppearanceStyle.isLiquidGlassAvailable {
+                Section(preferences.t(.sectionAppearance)) {
+                    Picker(preferences.t(.launcherStyle), selection: $preferences.appearanceStyle) {
+                        ForEach(AppearanceStyle.allCases) { style in
+                            Text(style.displayName(language: preferences.uiLanguage)).tag(style)
+                        }
                     }
+                    .pickerStyle(.radioGroup)
                 }
-                .pickerStyle(.radioGroup)
-                Text(resolveAppearanceHint())
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
             Section(preferences.t(.sectionCopyFormat)) {
                 Picker(preferences.t(.format), selection: $preferences.copyFormat) {
@@ -60,14 +58,6 @@ struct GeneralSettingsTab: View {
         }
         .formStyle(.grouped)
         .padding()
-    }
-
-    /// 外观选项说明。
-    private func resolveAppearanceHint() -> String {
-        if AppearanceStyle.isLiquidGlassAvailable {
-            return preferences.t(.appearanceHintLiquidAvailable)
-        }
-        return preferences.t(.appearanceHintLiquidUnavailable)
     }
 
     /// 用固定样例预览模板效果。
