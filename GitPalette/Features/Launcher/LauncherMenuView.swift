@@ -2,20 +2,22 @@
 //  LauncherMenuView.swift
 //  GitPalette
 //
-//  菜单栏弹出菜单占位内容。
+//  菜单栏弹出菜单：打开启动器、设置、退出。
 //
 
 import AppKit
 import SwiftUI
 
-/// 菜单栏 Extra 菜单占位视图。
+/// 菜单栏 Extra 菜单视图。
 struct LauncherMenuView: View {
+    @Environment(\.openWindow) private var openWindow
+
     var body: some View {
-        Button("打开启动器（占位）") {
-            executeOpenLauncherPlaceholder()
+        Button("打开启动器") {
+            executeOpenLauncher()
         }
         SettingsLink {
-            Text("设置（占位）")
+            Text("设置")
         }
         Divider()
         Button("退出") {
@@ -23,9 +25,10 @@ struct LauncherMenuView: View {
         }
     }
 
-    /// 打开启动器占位（本阶段不打开面板、不触发搜索）。
-    private func executeOpenLauncherPlaceholder() {
-        // 后续阶段：唤起 Gitmoji 搜索面板
+    /// 打开 Gitmoji 启动器窗口。
+    private func executeOpenLauncher() {
+        openWindow(id: "launcher")
+        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
     /// 退出应用。

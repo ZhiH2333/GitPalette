@@ -2,7 +2,7 @@
 //  GitPaletteApp.swift
 //  GitPalette
 //
-//  应用入口：菜单栏 Agent 壳层（无 Dock 主窗口业务）。
+//  应用入口：菜单栏 Agent 壳层 + 临时启动器窗口。
 //
 
 import SwiftUI
@@ -17,8 +17,12 @@ struct GitPaletteApp: App {
         } label: {
             Label(appConfig.appName, systemImage: "paintpalette.fill")
         }
+        Window("启动器", id: "launcher") {
+            GitmojiListView(appConfig: appConfig)
+        }
+        .defaultSize(width: 480, height: 560)
         Settings {
-            SettingsView()
+            SettingsView(appConfig: appConfig)
                 .applyGlassStylePlaceholder()
         }
     }
