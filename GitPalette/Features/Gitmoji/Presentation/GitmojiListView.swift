@@ -14,7 +14,6 @@ struct GitmojiListView: View {
     let focusToken: UUID
     let onDismiss: () -> Void
     let onConfirmCopy: () -> Void
-    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,12 +27,6 @@ struct GitmojiListView: View {
             buildFooter()
         }
         .frame(width: 560, height: 420)
-        .onAppear {
-            executeFocusSearchField()
-        }
-        .onChange(of: focusToken) { _, _ in
-            executeFocusSearchField()
-        }
     }
 
     /// 是否展示最近使用区。
@@ -47,15 +40,16 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildToolbar() -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("搜索 Gitmoji…", text: $viewModel.query)
-                .textFieldStyle(.plain)
-                .font(.title3)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 6)
-                .focused($isSearchFocused)
-                .onSubmit {
-                    onConfirmCopy()
-                }
+            GitmojiSearchField(
+                text: $viewModel.query,
+                placeholder: "搜索 Gitmoji…",
+                focusToken: focusToken,
+                onSubmit: onConfirmCopy,
+                onCancel: onDismiss
+            )
+            .frame(height: 28)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 6)
             HStack {
                 Text("复制格式")
                     .font(.caption)
@@ -65,6 +59,7 @@ struct GitmojiListView: View {
                         Text(format.displayName).tag(format)
                     }
                 }
+                .labelsHidden()
                 .pickerStyle(.menu)
                 .frame(maxWidth: 160)
                 Spacer(minLength: 0)
@@ -187,13 +182,6 @@ struct GitmojiListView: View {
             return "无结果"
         }
         return "共 \(viewModel.filtered.count) 项 · 第 \(viewModel.selectedIndex + 1) 项"
-    }
-
-    /// 聚焦搜索框。
-    private func executeFocusSearchField() {
-        DispatchQueue.main.async {
-            isSearchFocused = true
-        }
     }
 
     /// 将选中行滚入可视区域。

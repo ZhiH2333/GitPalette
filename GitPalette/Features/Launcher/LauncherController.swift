@@ -19,6 +19,7 @@ final class LauncherController {
     private var hostingController: NSHostingController<LauncherPanelContentView>?
     private var resignObserver: NSObjectProtocol?
     private var keyMonitor: Any?
+    private var activationObserver: NSObjectProtocol?
     private var focusToken: UUID = UUID()
     private var isPresenting: Bool = false
     private var previousFrontApp: NSRunningApplication?
@@ -37,6 +38,7 @@ final class LauncherController {
             recentStore: recentStore,
             appConfig: appConfig
         )
+        executeRegisterFrontAppTracker()
     }
 
     /// 清空最近使用并刷新已打开面板。
@@ -63,7 +65,7 @@ final class LauncherController {
             executeBringToFront(panel)
             return
         }
-        previousFrontApp = NSWorkspace.shared.frontmostApplication
+        executeCapturePreviousFrontAppIfNeeded()
         viewModel.executeResetForPresentation()
         focusToken = UUID()
         let panel: NSPanel = resolvePanel()
@@ -85,10 +87,15 @@ final class LauncherController {
         }
         executeUnregisterKeyMonitor()
         executeUnregisterResignObserver()
+        panel?.makeFirstResponder(nil)
         panel?.orderOut(nil)
         isPresenting = false
         if shouldRestoreFocus {
-            executeRestorePreviousAppFocus()
+            let previous: NSRunningApplication? = previousFrontApp
+            previousFrontApp = nil
+            DispatchQueue.main.async {
+                self.executeRestoreAppFocus(previous)
+            }
         } else {
             previousFrontApp = nil
         }
@@ -112,10 +119,44 @@ final class LauncherController {
         }
     }
 
-    /// 将焦点交还给唤起前的前台应用，避免 LSUIElement 残留抢焦。
-    private func executeRestorePreviousAppFocus() {
-        let previous: NSRunningApplication? = previousFrontApp
-        previousFrontApp = nil
+    /// 持续记住「非自身」的前台 App。
+    private func executeRegisterFrontAppTracker() {
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let app: NSRunningApplication =
+                notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            else {
+                return
+            }
+            guard app.processIdentifier != NSRunningApplication.current.processIdentifier else {
+                return
+            }
+            Task { @MainActor in
+                guard let self, !self.isPresenting else {
+                    return
+                }
+                self.previousFrontApp = app
+            }
+        }
+        executeCapturePreviousFrontAppIfNeeded()
+    }
+
+    /// 若当前前台不是自身，则更新 previousFrontApp。
+    private func executeCapturePreviousFrontAppIfNeeded() {
+        guard let front: NSRunningApplication = NSWorkspace.shared.frontmostApplication else {
+            return
+        }
+        guard front.processIdentifier != NSRunningApplication.current.processIdentifier else {
+            return
+        }
+        previousFrontApp = front
+    }
+
+    /// 激活指定应用（若仍有效且非自身）。
+    private func executeRestoreAppFocus(_ previous: NSRunningApplication?) {
         guard let previous, previous.processIdentifier != NSRunningApplication.current.processIdentifier else {
             return
         }
@@ -127,13 +168,16 @@ final class LauncherController {
         if let panel {
             return panel
         }
-        let created: NSPanel = LauncherPanelFactory.makePanel()
+        let created: LauncherPanel = LauncherPanelFactory.makePanel()
         let hosting: NSHostingController<LauncherPanelContentView> = NSHostingController(
             rootView: buildContentView()
         )
         hosting.view.frame = NSRect(origin: .zero, size: LauncherPanelFactory.panelSize)
         hosting.view.autoresizingMask = [.width, .height]
         created.contentView = hosting.view
+        created.onCancelOperation = { [weak self] in
+            self?.dismiss(shouldRestoreFocus: true)
+        }
         self.panel = created
         self.hostingController = hosting
         return created
@@ -190,7 +234,7 @@ final class LauncherController {
         }
     }
 
-    /// 本地键盘监视：搜索框聚焦时仍保证 ↑↓ / Esc 可用。
+    /// 本地键盘监视：仅处理 ↑↓。Esc 必须交给响应链（TextField doCommandBy），否则会 NSBeep。
     private func executeRegisterKeyMonitor() {
         executeUnregisterKeyMonitor()
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -206,9 +250,12 @@ final class LauncherController {
         }
     }
 
-    /// 处理面板内快捷键；返回 nil 表示已消费（唯一选中移动入口，避免与 SwiftUI 重复）。
+    /// 处理 ↑↓；Esc 原样放行给字段编辑器。
     private func executeHandleKeyEvent(_ event: NSEvent) -> NSEvent? {
         guard isPresenting, panel?.isKeyWindow == true else {
+            return event
+        }
+        if event.keyCode == 53 {
             return event
         }
         if event.modifierFlags.contains(.command)
@@ -222,9 +269,6 @@ final class LauncherController {
             return nil
         case 125:
             viewModel.executeSelectNext()
-            return nil
-        case 53:
-            dismiss(shouldRestoreFocus: true)
             return nil
         default:
             return event

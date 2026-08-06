@@ -13,7 +13,7 @@ enum LauncherPanelFactory {
     static let panelSize: NSSize = NSSize(width: 568, height: 428)
 
     /// 创建 borderless 浮动面板（需成为 key 以支持输入；失焦由 Controller 关闭）。
-    static func makePanel() -> NSPanel {
+    static func makePanel() -> LauncherPanel {
         let panel = LauncherPanel(
             contentRect: NSRect(origin: .zero, size: panelSize),
             styleMask: [.borderless, .fullSizeContentView],
