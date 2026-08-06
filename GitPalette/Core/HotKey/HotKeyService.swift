@@ -66,6 +66,12 @@ final class HotKeyService {
         accessibilityService.executeOpenAccessibilitySettings()
     }
 
+    /// 重置为默认热键 ⌘⇧G。
+    func executeResetToDefaultShortcut() {
+        KeyboardShortcuts.reset(.toggleLauncher)
+        executeRefreshStatus()
+    }
+
     /// 首次启动且无权限时弹出引导（不静默失败）。
     private func executePresentGuideIfNeededOnLaunch() {
         guard !isAccessibilityGranted else {

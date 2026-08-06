@@ -61,11 +61,12 @@ struct GitmojiListView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Picker("复制格式", selection: $appConfig.copyFormat) {
-                    Text("emoji").tag(CopyFormat.emoji)
-                    Text(":code:").tag(CopyFormat.code)
+                    ForEach(CopyFormat.allCases) { format in
+                        Text(format.displayName).tag(format)
+                    }
                 }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 200)
+                .pickerStyle(.menu)
+                .frame(maxWidth: 160)
                 Spacer(minLength: 0)
                 Text("↑↓ 选择 · ⏎ 复制 · Esc 关闭")
                     .font(.caption2)

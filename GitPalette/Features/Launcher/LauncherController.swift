@@ -13,6 +13,7 @@ import SwiftUI
 @Observable
 final class LauncherController {
     private let appConfig: AppConfig
+    private let recentStore: RecentGitmojiStore
     private let viewModel: GitmojiListViewModel
     private var panel: NSPanel?
     private var hostingController: NSHostingController<LauncherPanelContentView>?
@@ -22,14 +23,37 @@ final class LauncherController {
     private var isPresenting: Bool = false
     private var previousFrontApp: NSRunningApplication?
 
-    init(appConfig: AppConfig, repository: GitmojiRepository? = nil) {
+    init(
+        appConfig: AppConfig,
+        recentStore: RecentGitmojiStore,
+        repository: GitmojiRepository? = nil
+    ) {
         self.appConfig = appConfig
+        self.recentStore = recentStore
         let resolvedRepository: GitmojiRepository =
             repository ?? ((try? BundleGitmojiRepository()) ?? EmptyGitmojiRepository())
         self.viewModel = GitmojiListViewModel(
             repository: resolvedRepository,
+            recentStore: recentStore,
             appConfig: appConfig
         )
+    }
+
+    /// 清空最近使用并刷新已打开面板。
+    func executeClearRecentItems() {
+        recentStore.executeClear()
+        viewModel.executeReloadRecentItems()
+        if isPresenting {
+            executeRefreshHostingContent()
+        }
+    }
+
+    /// 在最近数量变更后裁剪并刷新。
+    func executeReloadRecentItems() {
+        viewModel.executeReloadRecentItems()
+        if isPresenting {
+            executeRefreshHostingContent()
+        }
     }
 
     /// 打开面板并聚焦搜索框。

@@ -110,14 +110,7 @@ final class GitmojiListViewModel {
 
     /// 按当前格式解析复制文本。
     private func resolveCopyText(for item: Gitmoji) -> String {
-        switch appConfig.copyFormat {
-        case .emoji:
-            return item.emoji
-        case .code:
-            return item.code
-        case .emojiAndDescription:
-            return "\(item.emoji) \(item.description)"
-        }
+        appConfig.resolveCopyText(for: item)
     }
 
     /// 写入系统剪贴板。
@@ -128,7 +121,7 @@ final class GitmojiListViewModel {
     }
 
     /// 刷新最近使用列表。
-    private func executeReloadRecentItems() {
+    func executeReloadRecentItems() {
         let codes: [String] = recentStore.loadCodes()
         let lookup: [String: Gitmoji] = Dictionary(
             uniqueKeysWithValues: repository.all.map { ($0.code, $0) }

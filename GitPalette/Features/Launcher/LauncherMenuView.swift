@@ -10,7 +10,7 @@ import SwiftUI
 
 /// 菜单栏 Extra 菜单视图。
 struct LauncherMenuView: View {
-    @Bindable var appConfig: AppConfig
+    @Bindable var preferences: PreferencesStore
     var launcherController: LauncherController
     var hotKeyService: HotKeyService
     @Environment(\.openWindow) private var openWindow
@@ -19,7 +19,6 @@ struct LauncherMenuView: View {
         Button("打开启动器") {
             executeOpenLauncher()
         }
-        .keyboardShortcut("g", modifiers: [.command, .shift])
         if !hotKeyService.isAccessibilityGranted {
             Button("授予辅助功能权限…") {
                 hotKeyService.executePresentPermissionGuide()
@@ -28,26 +27,23 @@ struct LauncherMenuView: View {
         }
         Divider()
         Menu("复制格式") {
-            Button {
-                appConfig.copyFormat = .emoji
-            } label: {
-                buildCopyFormatLabel(title: "emoji", format: .emoji)
-            }
-            Button {
-                appConfig.copyFormat = .code
-            } label: {
-                buildCopyFormatLabel(title: ":code:", format: .code)
+            ForEach(CopyFormat.allCases) { format in
+                Button {
+                    preferences.copyFormat = format
+                } label: {
+                    buildCopyFormatLabel(format: format)
+                }
             }
         }
         Divider()
         SettingsLink {
             Text("设置…")
         }
-        Button("关于 \(appConfig.appName)") {
+        Button("关于 \(preferences.appName)") {
             openWindow(id: AppWindowID.about)
         }
         Divider()
-        Button("退出 \(appConfig.appName)") {
+        Button("退出 \(preferences.appName)") {
             executeQuitApp()
         }
         .onAppear {
@@ -88,11 +84,11 @@ struct LauncherMenuView: View {
 
     /// 复制格式菜单项标题（含勾选）。
     @ViewBuilder
-    private func buildCopyFormatLabel(title: String, format: CopyFormat) -> some View {
-        if appConfig.copyFormat == format {
-            Label(title, systemImage: "checkmark")
+    private func buildCopyFormatLabel(format: CopyFormat) -> some View {
+        if preferences.copyFormat == format {
+            Label(format.displayName, systemImage: "checkmark")
         } else {
-            Text(title)
+            Text(format.displayName)
         }
     }
 

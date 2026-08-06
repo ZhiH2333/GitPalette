@@ -8,11 +8,25 @@
 import Foundation
 
 /// Gitmoji 复制格式。
-enum CopyFormat: String, CaseIterable, Sendable {
+enum CopyFormat: String, CaseIterable, Identifiable, Sendable {
     /// 仅表情符号
     case emoji
     /// 仅 shortcode（如 `:sparkles:`）
     case code
-    /// 表情 + 描述（预留）
-    case emojiAndDescription
+    /// 自定义模板（如 `{emoji} `）
+    case customTemplate
+
+    var id: String { rawValue }
+
+    /// 设置 / 菜单展示名。
+    var displayName: String {
+        switch self {
+        case .emoji:
+            return "emoji"
+        case .code:
+            return ":code:"
+        case .customTemplate:
+            return "自定义模板"
+        }
+    }
 }

@@ -1,65 +1,77 @@
 # GitPalette
 
-面向 macOS 的菜单栏 Gitmoji 助手（Menu Bar Agent）。当前处于 **P3：全局热键 ⌘⇧G + Menu Bar 定型**。
+面向 macOS 的菜单栏 Gitmoji 助手（Menu Bar Agent）。当前处于 **P4：原生 Settings 与偏好持久化**。
 
 ## 产品定位
 
 - **形态**：`LSUIElement` 菜单栏应用，无 Dock 图标
-- **能力**：Spotlight 风格启动器、本地 Gitmoji 搜索复制、全局热键唤起
+- **能力**：Spotlight 启动器、本地搜索复制、全局热键、可配置偏好
 - **平台**：macOS 26（Tahoe），Swift 6 + SwiftUI
 - **依赖**：KeyboardShortcuts（唯一 SPM）
 
-## 全局热键与权限
+## 设置与偏好
 
-默认热键：**⌘⇧G**（配置集中在 `HotKeyDefaults` / `HotKeyService`，P4 可改为用户可配置）。
+打开 **设置…**（菜单栏或系统 Settings 场景）包含三页：
 
-### 辅助功能权限（必做）
+| Tab | 内容 |
+|-----|------|
+| **通用** | 复制格式（emoji / `:code:` / 自定义模板）、最近使用数量、清空最近使用 |
+| **快捷键** | 录制全局热键（立即生效）、恢复默认 ⌘⇧G、辅助功能权限 |
+| **关于** | 应用信息、菜单栏图标说明；AI/API Key 标注为 P5 |
 
-全局热键需在系统中允许本应用访问辅助功能，否则在其他 App 前台时无法可靠唤起：
+### 复制格式
 
-1. 打开 **系统设置 → 隐私与安全性 → 辅助功能**
-2. 找到并勾选 **GitPalette**
-3. 若列表中没有，先运行一次应用，或点击应用内「打开系统设置」后添加
+- `emoji`：仅表情
+- `:code:`：仅 shortcode
+- **自定义模板**：支持 `{emoji}` `{code}` `{name}` `{description}`，默认 `{emoji} `
 
-未授权时：
+偏好存于 `UserDefaults`（`PreferencesKeys`），运行时由 **`PreferencesStore`** 持有；启动器与设置共用同一实例，修改后 Return 复制立即生效。
 
-- 首次启动会弹出中文引导窗（不静默失败）
-- 菜单栏提供「授予辅助功能权限…」
-- 设置页显示权限状态与「重新检测」
+### 全局热键
 
-若热键与系统快捷键冲突，应用内会显示橙色提示，可到 **系统设置 → 键盘 → 键盘快捷键** 调整冲突项。
+- 默认 **⌘⇧G**，可在「快捷键」页用录制器修改；旧键立即失效、新键立即可用（仍需辅助功能权限）
+- 持久化由 KeyboardShortcuts 负责
+- 配置默认值集中在 `HotKeyDefaults`
 
-## 架构与目录（增量）
+### 辅助功能权限
+
+1. **系统设置 → 隐私与安全性 → 辅助功能** → 勾选 GitPalette  
+2. 未授权时有中文引导，不静默失败
+
+### 菜单栏图标
+
+应用为 LSUIElement：启动后图标在菜单栏，**无 Dock 图标**。详见设置「关于」页说明。
+
+## 架构（偏好相关）
 
 ```
-Core/
-  Config/HotKeyDefaults.swift     # 默认 ⌘⇧G
-  HotKey/
-    HotKeyService.swift           # 封装 KeyboardShortcuts
-    HotKeyShortcutName.swift
-    AccessibilityPermissionService.swift
-Features/
-  Launcher/                       # NSPanel + Menu Bar
-  Settings/                       # 极简设置 / 权限引导 / 关于
+Core/Config/
+  PreferencesStore.swift   # 运行时偏好（= AppConfig 别名）
+  PreferencesKeys.swift
+  CopyFormat.swift
+  HotKeyDefaults.swift
+Core/HotKey/
+  HotKeyService.swift
+  HotKeyRecorderView.swift # 封装 Recorder，不泄漏到业务 View 细节
+Features/Settings/
+  SettingsView.swift       # Tab：通用 / 快捷键 / 关于
+  GeneralSettingsTab.swift
+  HotKeySettingsTab.swift
+  AboutSettingsTab.swift
 ```
-
-热键触发路径：`⌘⇧G` → `HotKeyService` → `LauncherController.toggle()`。
 
 ## 阶段路线
 
-1. P0 Shell ✅
-2. P1 Gitmoji 搜索复制 ✅
-3. P2 浮动面板 + 键盘 ✅
-4. **P3 全局热键（当前）** ✅
-5. P4 完整设置 / 可配置热键
-6. P5 AI（可选）与分发
+1. P0–P3 ✅  
+2. **P4 Settings / 偏好（当前）** ✅  
+3. P5 AI（可选，含 API Key）  
+4. P6 在线同步等  
 
 ## 如何运行
 
-1. `⌘R` 运行后，按提示授予辅助功能权限
-2. 在任意 App 中按 **⌘⇧G** 唤起 / 再按关闭
-3. 唤起后可直接输入搜索；↑↓ 选择；⏎ 复制；Esc 关闭
-4. 菜单栏：打开启动器、复制格式、设置、关于、退出
+1. `⌘R` → 授予辅助功能  
+2. ⌘⇧G 唤起启动器；设置中改复制格式 / 热键后验证立即生效与重启保持  
+3. 清空最近使用后，启动器顶部最近区应消失  
 
 ```bash
 xcodebuild -scheme GitPalette -configuration Debug build
@@ -67,7 +79,7 @@ xcodebuild -scheme GitPalette -configuration Debug build
 
 ### 验收要点
 
-- [x] 授予辅助功能后，任意 App 前台 ⌘⇧G 可 toggle
-- [x] 唤起后可立即键盘搜索
-- [x] 未授权有中文引导，不静默失败
-- [x] P2 键盘闭环无回归
+- [x] 改复制格式后启动器 Return 结果立即符合新格式  
+- [x] 改热键后旧键失效、新键可用  
+- [x] 设置项重启后保持  
+- [x] P3 热键唤起无回归  
