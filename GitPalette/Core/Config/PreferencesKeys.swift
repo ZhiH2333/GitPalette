@@ -14,4 +14,7 @@ enum PreferencesKeys {
     static let recentMaxCount: String = "gitpalette.recentMaxCount"
     static let recentGitmojiCodes: String = "gitpalette.recentGitmojiCodes"
     static let appearanceStyle: String = "gitpalette.appearanceStyle"
+    static let uiLanguage: String = "gitpalette.uiLanguage"
+    static let codeTranslationLanguage: String = "gitpalette.codeTranslationLanguage"
+    static let descriptionLanguage: String = "gitpalette.descriptionLanguage"
 }

@@ -39,6 +39,18 @@ final class PreferencesStore: ObservableObject {
     @Published var appearanceStyle: AppearanceStyle {
         didSet { executePersistAppearanceStyle() }
     }
+    /// 界面语言
+    @Published var uiLanguage: AppLanguage {
+        didSet { executePersistUILanguage() }
+    }
+    /// Code 翻译语言（English 仅 shortcode；简体中文追加译名）
+    @Published var codeTranslationLanguage: AppLanguage {
+        didSet { executePersistCodeTranslationLanguage() }
+    }
+    /// 描述语言
+    @Published var descriptionLanguage: AppLanguage {
+        didSet { executePersistDescriptionLanguage() }
+    }
 
     init(
         appName: String = "GitPalette",
@@ -52,18 +64,37 @@ final class PreferencesStore: ObservableObject {
         self.copyTemplate = Self.executeLoadCopyTemplate()
         self.recentMaxCount = Self.executeLoadRecentMaxCount()
         self.appearanceStyle = Self.executeLoadAppearanceStyle()
+        self.uiLanguage = Self.executeLoadLanguage(key: PreferencesKeys.uiLanguage, fallback: .systemDefault)
+        self.codeTranslationLanguage = Self.executeLoadLanguage(
+            key: PreferencesKeys.codeTranslationLanguage,
+            fallback: .english
+        )
+        self.descriptionLanguage = Self.executeLoadLanguage(
+            key: PreferencesKeys.descriptionLanguage,
+            fallback: .systemDefault
+        )
     }
 
-    /// 按当前格式生成复制文本。
+    /// 按当前格式生成复制文本（code / description 遵循对应语言偏好）。
     func resolveCopyText(for item: Gitmoji) -> String {
         switch copyFormat {
         case .emoji:
             return item.emoji
         case .code:
-            return item.code
+            return resolveLocalizedCode(for: item)
         case .customTemplate:
             return executeApplyTemplate(copyTemplate, item: item)
         }
+    }
+
+    /// 列表 / 复制用的本地化 code。
+    func resolveLocalizedCode(for item: Gitmoji) -> String {
+        GitmojiLocalization.resolveCodeText(for: item, language: codeTranslationLanguage)
+    }
+
+    /// 列表 / 复制用的本地化描述。
+    func resolveLocalizedDescription(for item: Gitmoji) -> String {
+        GitmojiLocalization.resolveDescriptionText(for: item, language: descriptionLanguage)
     }
 
     /// 将模板占位符替换为条目字段。
@@ -71,9 +102,9 @@ final class PreferencesStore: ObservableObject {
         let trimmed: String = template.isEmpty ? Self.defaultCopyTemplate : template
         return trimmed
             .replacingOccurrences(of: "{emoji}", with: item.emoji)
-            .replacingOccurrences(of: "{code}", with: item.code)
+            .replacingOccurrences(of: "{code}", with: resolveLocalizedCode(for: item))
             .replacingOccurrences(of: "{name}", with: item.name)
-            .replacingOccurrences(of: "{description}", with: item.description)
+            .replacingOccurrences(of: "{description}", with: resolveLocalizedDescription(for: item))
     }
 
     private func executePersistCopyFormat() {
@@ -97,6 +128,24 @@ final class PreferencesStore: ObservableObject {
 
     private func executePersistAppearanceStyle() {
         UserDefaults.standard.set(appearanceStyle.rawValue, forKey: PreferencesKeys.appearanceStyle)
+    }
+
+    private func executePersistUILanguage() {
+        UserDefaults.standard.set(uiLanguage.rawValue, forKey: PreferencesKeys.uiLanguage)
+    }
+
+    private func executePersistCodeTranslationLanguage() {
+        UserDefaults.standard.set(
+            codeTranslationLanguage.rawValue,
+            forKey: PreferencesKeys.codeTranslationLanguage
+        )
+    }
+
+    private func executePersistDescriptionLanguage() {
+        UserDefaults.standard.set(
+            descriptionLanguage.rawValue,
+            forKey: PreferencesKeys.descriptionLanguage
+        )
     }
 
     private static func executeLoadCopyFormat() -> CopyFormat {
@@ -141,6 +190,13 @@ final class PreferencesStore: ObservableObject {
             return .automatic
         }
         return AppearanceStyle(rawValue: raw) ?? .automatic
+    }
+
+    private static func executeLoadLanguage(key: String, fallback: AppLanguage) -> AppLanguage {
+        guard let raw: String = UserDefaults.standard.string(forKey: key) else {
+            return fallback
+        }
+        return AppLanguage(rawValue: raw) ?? fallback
     }
 }
 

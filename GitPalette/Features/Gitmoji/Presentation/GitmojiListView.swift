@@ -39,7 +39,7 @@ struct GitmojiListView: View {
                 .frame(width: 28, alignment: .center)
             GitmojiSearchField(
                 text: $viewModel.query,
-                placeholder: "搜索 Gitmoji",
+                placeholder: appConfig.t(.searchPlaceholder),
                 focusToken: focusToken,
                 onSubmit: onConfirmCopy,
                 onCancel: onDismiss
@@ -54,7 +54,7 @@ struct GitmojiListView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("清除")
+                .help(appConfig.t(.clear))
             }
         }
         .padding(.horizontal, 20)
@@ -66,7 +66,7 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildRecentSection() -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("最近使用")
+            Text(appConfig.t(.recentUsed))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
@@ -97,7 +97,7 @@ struct GitmojiListView: View {
                                     }
                             }
                             .buttonStyle(.plain)
-                            .help(item.code)
+                            .help(appConfig.resolveLocalizedCode(for: item))
                             .id(item.id)
                         }
                     }
@@ -133,9 +133,9 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildResultArea() -> some View {
         if viewModel.isDataEmpty {
-            buildEmptyState(message: "暂无 Gitmoji 数据")
+            buildEmptyState(message: appConfig.t(.noGitmojiData))
         } else if viewModel.filtered.isEmpty {
-            buildEmptyState(message: "未找到匹配的 Gitmoji")
+            buildEmptyState(message: appConfig.t(.noMatch))
         } else {
             buildList()
         }
@@ -166,6 +166,8 @@ struct GitmojiListView: View {
                     ForEach(Array(viewModel.filtered.enumerated()), id: \.element.id) { index, item in
                         GitmojiRowView(
                             item: item,
+                            codeText: appConfig.resolveLocalizedCode(for: item),
+                            descriptionText: appConfig.resolveLocalizedDescription(for: item),
                             isSelected: viewModel.selectionFocus == .list
                                 && index == viewModel.selectedIndex
                         )
@@ -199,9 +201,9 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildFooter() -> some View {
         HStack(spacing: 10) {
-            Picker("复制格式", selection: $appConfig.copyFormat) {
+            Picker(appConfig.t(.copyFormatMenu), selection: $appConfig.copyFormat) {
                 ForEach(CopyFormat.allCases) { format in
-                    Text(format.displayName).tag(format)
+                    Text(format.displayName(language: appConfig.uiLanguage)).tag(format)
                 }
             }
             .labelsHidden()
@@ -228,23 +230,23 @@ struct GitmojiListView: View {
     /// 底部计数文案。
     private func resolveFooterCountText() -> String {
         if viewModel.isDataEmpty {
-            return "无数据"
+            return appConfig.t(.noData)
         }
         if viewModel.filtered.isEmpty {
-            return "无结果"
+            return appConfig.t(.noResult)
         }
         if viewModel.selectionFocus == .recent {
-            return "最近 \(viewModel.recentItems.count) 项"
+            return appConfig.t(.recentCount) + "\(viewModel.recentItems.count)" + appConfig.t(.itemCount)
         }
-        return "\(viewModel.filtered.count) 项"
+        return "\(viewModel.filtered.count)" + appConfig.t(.itemCount)
     }
 
     /// 底部操作提示。
     private func resolveHintText() -> String {
         if viewModel.shouldShowRecentSection {
-            return "↑↓←→ 选择 · ⏎ 复制"
+            return appConfig.t(.hintWithRecent)
         }
-        return "↑↓ 选择 · ⏎ 复制"
+        return appConfig.t(.hintListOnly)
     }
 
     /// 将选中行滚入可视区域。

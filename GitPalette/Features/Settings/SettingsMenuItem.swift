@@ -10,11 +10,13 @@ import SwiftUI
 
 /// 菜单栏「设置…」项。
 struct SettingsMenuItem: View {
+    @ObservedObject var preferences: PreferencesStore
+
     var body: some View {
         if #available(macOS 14.0, *) {
-            SettingsOpenButtonModern()
+            SettingsOpenButtonModern(preferences: preferences)
         } else {
-            Button("设置…") {
+            Button(preferences.t(.settings)) {
                 SettingsWindowOpener.executeOpenLegacy()
             }
         }
@@ -24,10 +26,11 @@ struct SettingsMenuItem: View {
 /// macOS 14+：通过 Environment.openSettings 打开 Settings 场景。
 @available(macOS 14.0, *)
 private struct SettingsOpenButtonModern: View {
+    @ObservedObject var preferences: PreferencesStore
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Button("设置…") {
+        Button(preferences.t(.settings)) {
             AppWindowFocus.executePrepareForWindowPresentation()
             openSettings()
             AppWindowFocus.executeBringSettingsToFront()

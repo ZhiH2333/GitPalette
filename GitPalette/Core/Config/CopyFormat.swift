@@ -19,14 +19,14 @@ enum CopyFormat: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 
     /// 设置 / 菜单展示名。
-    var displayName: String {
+    func displayName(language: AppLanguage) -> String {
         switch self {
         case .emoji:
-            return "emoji"
+            return L10n.text(.formatEmoji, language: language)
         case .code:
-            return ":code:"
+            return L10n.text(.formatCode, language: language)
         case .customTemplate:
-            return "自定义模板"
+            return L10n.text(.formatCustomTemplate, language: language)
         }
     }
 }

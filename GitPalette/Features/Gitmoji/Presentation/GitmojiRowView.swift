@@ -10,6 +10,8 @@ import SwiftUI
 /// Gitmoji 列表行。
 struct GitmojiRowView: View {
     let item: Gitmoji
+    let codeText: String
+    let descriptionText: String
     let isSelected: Bool
 
     var body: some View {
@@ -18,9 +20,10 @@ struct GitmojiRowView: View {
                 .font(.title2)
                 .frame(width: 40, alignment: .center)
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.code)
+                Text(codeText)
                     .font(.body.weight(.medium).monospaced())
-                Text(item.description)
+                    .lineLimit(1)
+                Text(descriptionText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

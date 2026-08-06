@@ -14,10 +14,10 @@ struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("外观") {
-                Picker("启动器风格", selection: $preferences.appearanceStyle) {
+            Section(preferences.t(.sectionAppearance)) {
+                Picker(preferences.t(.launcherStyle), selection: $preferences.appearanceStyle) {
                     ForEach(AppearanceStyle.allCases) { style in
-                        Text(style.displayName).tag(style)
+                        Text(style.displayName(language: preferences.uiLanguage)).tag(style)
                     }
                 }
                 .pickerStyle(.radioGroup)
@@ -26,34 +26,34 @@ struct GeneralSettingsTab: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Section("复制格式") {
-                Picker("格式", selection: $preferences.copyFormat) {
+            Section(preferences.t(.sectionCopyFormat)) {
+                Picker(preferences.t(.format), selection: $preferences.copyFormat) {
                     ForEach(CopyFormat.allCases) { format in
-                        Text(format.displayName).tag(format)
+                        Text(format.displayName(language: preferences.uiLanguage)).tag(format)
                     }
                 }
                 .pickerStyle(.radioGroup)
                 if preferences.copyFormat == .customTemplate {
-                    TextField("模板", text: $preferences.copyTemplate)
-                    Text("可用占位符：{emoji} {code} {name} {description}")
+                    TextField(preferences.t(.template), text: $preferences.copyTemplate)
+                    Text(preferences.t(.templatePlaceholders))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("预览示例：✨ / :sparkles: → \(executePreviewSample())")
+                    Text(preferences.t(.templatePreviewPrefix) + executePreviewSample())
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
-            Section("最近使用") {
+            Section(preferences.t(.sectionRecent)) {
                 Stepper(
                     value: $preferences.recentMaxCount,
                     in: PreferencesStore.recentMaxCountRange
                 ) {
-                    Text("保留数量：\(preferences.recentMaxCount)")
+                    Text(preferences.t(.recentKeepCount) + "\(preferences.recentMaxCount)")
                 }
                 .onChangeCompat(of: preferences.recentMaxCount) { _ in
                     launcherController.executeReloadRecentItems()
                 }
-                Button("清空最近使用", role: .destructive) {
+                Button(preferences.t(.clearRecent), role: .destructive) {
                     launcherController.executeClearRecentItems()
                 }
             }
@@ -65,9 +65,9 @@ struct GeneralSettingsTab: View {
     /// 外观选项说明。
     private func resolveAppearanceHint() -> String {
         if AppearanceStyle.isLiquidGlassAvailable {
-            return "自动：在 macOS 26 使用液态玻璃，更低系统使用毛玻璃。也可手动固定风格。"
+            return preferences.t(.appearanceHintLiquidAvailable)
         }
-        return "当前系统不支持液态玻璃；选择「液态玻璃」时会回退为毛玻璃。升级到 macOS 26 后可使用液态玻璃。"
+        return preferences.t(.appearanceHintLiquidUnavailable)
     }
 
     /// 用固定样例预览模板效果。

@@ -16,17 +16,17 @@ struct LauncherMenuView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Button("打开启动器") {
+        Button(preferences.t(.openLauncher)) {
             executeOpenLauncher()
         }
         if !hotKeyService.isAccessibilityGranted {
-            Button("授予辅助功能权限…") {
+            Button(preferences.t(.grantAccessibility)) {
                 hotKeyService.executePresentPermissionGuide()
                 executeOpenAccessibilityWindow()
             }
         }
         Divider()
-        Menu("复制格式") {
+        Menu(preferences.t(.copyFormatMenu)) {
             ForEach(CopyFormat.allCases) { format in
                 Button {
                     preferences.copyFormat = format
@@ -36,12 +36,12 @@ struct LauncherMenuView: View {
             }
         }
         Divider()
-        SettingsMenuItem()
-        Button("关于 \(preferences.appName)") {
+        SettingsMenuItem(preferences: preferences)
+        Button(preferences.t(.about) + preferences.appName) {
             executeOpenAboutWindow()
         }
         Divider()
-        Button("退出 \(preferences.appName)") {
+        Button(preferences.t(.quit) + preferences.appName) {
             executeQuitApp()
         }
         .onAppear {
@@ -97,10 +97,11 @@ struct LauncherMenuView: View {
     /// 复制格式菜单项标题（含勾选）。
     @ViewBuilder
     private func buildCopyFormatLabel(format: CopyFormat) -> some View {
+        let title: String = format.displayName(language: preferences.uiLanguage)
         if preferences.copyFormat == format {
-            Label(format.displayName, systemImage: "checkmark")
+            Label(title, systemImage: "checkmark")
         } else {
-            Text(format.displayName)
+            Text(title)
         }
     }
 

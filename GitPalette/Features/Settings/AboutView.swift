@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 关于信息视图。
 struct AboutView: View {
-    let appName: String
+    @ObservedObject var preferences: PreferencesStore
     let hotkeyDisplayText: String
 
     var body: some View {
@@ -17,11 +17,11 @@ struct AboutView: View {
             Image(systemName: "paintpalette.fill")
                 .font(.system(size: 40))
                 .foregroundStyle(.tint)
-            Text(appName)
+            Text(preferences.appName)
                 .font(.title2.weight(.semibold))
-            Text("菜单栏 Gitmoji 助手")
+            Text(preferences.t(.menuBarAssistant))
                 .foregroundStyle(.secondary)
-            Text("全局热键：\(hotkeyDisplayText)")
+            Text(preferences.t(.aboutHotKeyLine) + hotkeyDisplayText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

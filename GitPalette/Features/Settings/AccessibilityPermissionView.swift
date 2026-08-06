@@ -2,21 +2,25 @@
 //  AccessibilityPermissionView.swift
 //  GitPalette
 //
-//  辅助功能权限引导（中文）。
+//  辅助功能权限引导。
 //
 
 import SwiftUI
 
 /// 辅助功能权限引导视图。
 struct AccessibilityPermissionView: View {
+    @ObservedObject var preferences: PreferencesStore
     @ObservedObject var hotKeyService: HotKeyService
     var onDismiss: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("需要辅助功能权限")
+            Text(preferences.t(.needAccessibilityTitle))
                 .font(.title2.weight(.semibold))
-            Text("全局热键 \(hotKeyService.hotkeyDisplayText) 需要在「系统设置 → 隐私与安全性 → 辅助功能」中允许 GitPalette，才能在其他应用前台时唤起启动器。")
+            Text(
+                preferences.t(.needAccessibilityBody)
+                    .replacingOccurrences(of: "GitPalette", with: preferences.appName)
+            )
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if let conflictHint: String = hotKeyService.conflictHint {
@@ -26,16 +30,16 @@ struct AccessibilityPermissionView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
-                Button("打开系统设置") {
+                Button(preferences.t(.openSystemSettings)) {
                     hotKeyService.executeOpenAccessibilitySettings()
                 }
                 .keyboardShortcut(.defaultAction)
-                Button("重新检测") {
+                Button(preferences.t(.recheck)) {
                     hotKeyService.executeRefreshStatus()
                 }
                 Spacer()
                 if let onDismiss {
-                    Button("稍后") {
+                    Button(preferences.t(.later)) {
                         onDismiss()
                     }
                 }

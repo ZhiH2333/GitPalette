@@ -38,14 +38,17 @@ struct GitPaletteApp: App {
         } label: {
             Label(preferences.appName, systemImage: "paintpalette.fill")
         }
-        Window("辅助功能权限", id: AppWindowID.accessibilityPermission) {
-            AccessibilityPermissionView(hotKeyService: hotKeyService)
-                .applyWindowForegroundFocus()
+        Window(preferences.t(.needAccessibilityTitle), id: AppWindowID.accessibilityPermission) {
+            AccessibilityPermissionView(
+                preferences: preferences,
+                hotKeyService: hotKeyService
+            )
+            .applyWindowForegroundFocus()
         }
         .windowResizability(.contentSize)
-        Window("关于 \(preferences.appName)", id: AppWindowID.about) {
+        Window(preferences.t(.about) + preferences.appName, id: AppWindowID.about) {
             AboutView(
-                appName: preferences.appName,
+                preferences: preferences,
                 hotkeyDisplayText: hotKeyService.hotkeyDisplayText
             )
             .applyWindowForegroundFocus()

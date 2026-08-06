@@ -239,7 +239,7 @@ final class GitmojiListViewModel: ObservableObject {
 
     /// 显示短暂「已复制」提示。
     private func executeShowCopyFeedback() {
-        copyFeedbackText = "已复制"
+        copyFeedbackText = appConfig.t(.copied)
         feedbackClearTask?.cancel()
         feedbackClearTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 1_200_000_000)

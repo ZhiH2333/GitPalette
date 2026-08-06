@@ -19,14 +19,14 @@ enum AppearanceStyle: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 
     /// 设置展示名。
-    var displayName: String {
+    func displayName(language: AppLanguage) -> String {
         switch self {
         case .automatic:
-            return "自动"
+            return L10n.text(.styleAutomatic, language: language)
         case .liquidGlass:
-            return "液态玻璃"
+            return L10n.text(.styleLiquidGlass, language: language)
         case .material:
-            return "毛玻璃"
+            return L10n.text(.styleMaterial, language: language)
         }
     }
 

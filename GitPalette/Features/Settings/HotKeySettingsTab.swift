@@ -9,22 +9,28 @@ import SwiftUI
 
 /// 快捷键设置页。
 struct HotKeySettingsTab: View {
+    @ObservedObject var preferences: PreferencesStore
     @ObservedObject var hotKeyService: HotKeyService
 
     var body: some View {
         Form {
-            Section("启动器热键") {
+            Section(preferences.t(.sectionLauncherHotKey)) {
                 HStack {
-                    Text("唤起 / 关闭启动器")
+                    Text(preferences.t(.toggleLauncher))
                     Spacer()
                     HotKeyRecorderView {
                         hotKeyService.executeRefreshStatus()
                     }
                 }
-                Text("当前：\(hotKeyService.hotkeyDisplayText)")
+                Text(preferences.t(.currentHotKey) + hotKeyService.hotkeyDisplayText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Button("恢复默认（\(HotKeyDefaults.displayText)）") {
+                Button(
+                    String(
+                        format: preferences.t(.resetDefaultHotKey),
+                        HotKeyDefaults.displayText
+                    )
+                ) {
                     hotKeyService.executeResetToDefaultShortcut()
                 }
                 if let conflictHint: String = hotKeyService.conflictHint {
@@ -33,17 +39,17 @@ struct HotKeySettingsTab: View {
                         .foregroundStyle(.orange)
                 }
             }
-            Section("辅助功能权限") {
+            Section(preferences.t(.sectionAccessibility)) {
                 if hotKeyService.isAccessibilityGranted {
-                    Text("已授予")
+                    Text(preferences.t(.accessibilityGranted))
                         .foregroundStyle(.green)
                 } else {
-                    Text("未授予：其他 App 前台时全局热键可能无法使用")
+                    Text(preferences.t(.accessibilityDenied))
                         .foregroundStyle(.orange)
-                    Button("打开系统设置…") {
+                    Button(preferences.t(.openSystemSettings)) {
                         hotKeyService.executeOpenAccessibilitySettings()
                     }
-                    Button("重新检测") {
+                    Button(preferences.t(.recheck)) {
                         hotKeyService.executeRefreshStatus()
                     }
                 }
