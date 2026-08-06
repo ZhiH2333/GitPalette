@@ -5,7 +5,6 @@
 //  macOS 13+ 兼容的 SwiftUI 辅助扩展。
 //
 
-import AppKit
 import SwiftUI
 
 extension View {
@@ -22,15 +21,5 @@ extension View {
         } else {
             onChange(of: value, perform: action)
         }
-    }
-}
-
-/// 打开系统 Settings 窗口（兼容无 SettingsLink 的系统）。
-enum SettingsWindowOpener {
-    static func executeOpen() {
-        if NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) {
-            return
-        }
-        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
     }
 }

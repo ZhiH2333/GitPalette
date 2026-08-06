@@ -36,9 +36,9 @@ struct LauncherMenuView: View {
             }
         }
         Divider()
-        buildSettingsButton()
+        SettingsMenuItem()
         Button("关于 \(preferences.appName)") {
-            openWindow(id: AppWindowID.about)
+            executeOpenAboutWindow()
         }
         Divider()
         Button("退出 \(preferences.appName)") {
@@ -52,20 +52,6 @@ struct LauncherMenuView: View {
                 return
             }
             executeOpenAccessibilityWindow()
-        }
-    }
-
-    /// 设置入口（macOS 14+ SettingsLink，更低系统回退按钮）。
-    @ViewBuilder
-    private func buildSettingsButton() -> some View {
-        if #available(macOS 14.0, *) {
-            SettingsLink {
-                Text("设置…")
-            }
-        } else {
-            Button("设置…") {
-                SettingsWindowOpener.executeOpen()
-            }
         }
     }
 
@@ -86,11 +72,25 @@ struct LauncherMenuView: View {
         }
     }
 
-    /// 打开辅助功能引导窗。
+    /// 打开关于窗口并置前。
+    private func executeOpenAboutWindow() {
+        DispatchQueue.main.async {
+            AppWindowFocus.executePrepareForWindowPresentation()
+            openWindow(id: AppWindowID.about)
+            AppWindowFocus.executeBringToFront(
+                titleContaining: ["关于", "About", preferences.appName]
+            )
+        }
+    }
+
+    /// 打开辅助功能引导窗并置前。
     private func executeOpenAccessibilityWindow() {
         DispatchQueue.main.async {
+            AppWindowFocus.executePrepareForWindowPresentation()
             openWindow(id: AppWindowID.accessibilityPermission)
-            NSApp.activate(ignoringOtherApps: true)
+            AppWindowFocus.executeBringToFront(
+                titleContaining: ["辅助功能", "Accessibility", "权限"]
+            )
         }
     }
 

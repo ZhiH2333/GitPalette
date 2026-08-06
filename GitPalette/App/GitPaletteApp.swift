@@ -40,6 +40,7 @@ struct GitPaletteApp: App {
         }
         Window("辅助功能权限", id: AppWindowID.accessibilityPermission) {
             AccessibilityPermissionView(hotKeyService: hotKeyService)
+                .applyWindowForegroundFocus()
         }
         .windowResizability(.contentSize)
         Window("关于 \(preferences.appName)", id: AppWindowID.about) {
@@ -47,6 +48,7 @@ struct GitPaletteApp: App {
                 appName: preferences.appName,
                 hotkeyDisplayText: hotKeyService.hotkeyDisplayText
             )
+            .applyWindowForegroundFocus()
         }
         .windowResizability(.contentSize)
         Settings {
@@ -55,6 +57,7 @@ struct GitPaletteApp: App {
                 hotKeyService: hotKeyService,
                 launcherController: launcherController
             )
+            .applyWindowForegroundFocus()
         }
     }
 }
