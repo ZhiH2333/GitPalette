@@ -2,7 +2,7 @@
 //  AboutView.swift
 //  GitPalette
 //
-//  关于窗口：图标、版本与版权信息。
+//  关于窗口：图标、版本、版权与 GitHub / Issue 链接。
 //
 
 import AppKit
@@ -11,6 +11,9 @@ import SwiftUI
 /// 关于信息视图。
 struct AboutView: View {
     @ObservedObject var preferences: PreferencesStore
+
+    private static let githubURL: URL = URL(string: "https://github.com/ZhiH2333/GitPalette")!
+    private static let issuesURL: URL = URL(string: "https://github.com/ZhiH2333/GitPalette/issues")!
 
     var body: some View {
         VStack(spacing: 12) {
@@ -33,6 +36,12 @@ struct AboutView: View {
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
             }
+            HStack(spacing: 16) {
+                Link(preferences.t(.aboutGitHub), destination: Self.githubURL)
+                Link(preferences.t(.aboutReportIssue), destination: Self.issuesURL)
+            }
+            .font(.caption)
+            .padding(.top, 2)
             Text(preferences.t(.aboutMenuBarNote))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
@@ -49,7 +58,7 @@ struct AboutView: View {
     private func resolveVersionLine() -> String {
         let shortVersion: String = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "1.0"
+        ) as? String ?? "1.0.0"
         let buildVersion: String = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleVersion"
         ) as? String ?? "1"

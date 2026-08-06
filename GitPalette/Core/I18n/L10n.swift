@@ -42,6 +42,8 @@ enum L10nKey: String, Sendable {
     case recheck
     case menuBarAssistant
     case aboutMenuBarNote
+    case aboutGitHub
+    case aboutReportIssue
     case versionFormat
     case openLauncher
     case grantAccessibility
@@ -118,6 +120,8 @@ enum L10n {
         .recheck: "Recheck",
         .menuBarAssistant: "Menu bar Gitmoji assistant",
         .aboutMenuBarNote: "Runs in the menu bar and does not appear in the Dock. Look for the palette icon on the right side of the menu bar.",
+        .aboutGitHub: "GitHub Repository",
+        .aboutReportIssue: "Report an Issue…",
         .versionFormat: "Version %@ (%@)",
         .openLauncher: "Open Launcher",
         .grantAccessibility: "Grant Accessibility…",
@@ -182,6 +186,8 @@ enum L10n {
         .recheck: "重新检测",
         .menuBarAssistant: "菜单栏 Gitmoji 助手",
         .aboutMenuBarNote: "本应用运行在菜单栏，不会出现在 Dock。请在菜单栏右侧查找调色板图标。",
+        .aboutGitHub: "GitHub 仓库",
+        .aboutReportIssue: "反馈 Issue…",
         .versionFormat: "版本 %@ (%@)",
         .openLauncher: "打开启动器",
         .grantAccessibility: "授予辅助功能权限…",
