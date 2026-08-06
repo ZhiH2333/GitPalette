@@ -2,7 +2,7 @@
 
 **GitPalette** is a macOS menu bar Gitmoji assistant. Search, browse, and copy Gitmoji with a Spotlight-style launcher.
 
-![GitPalette launcher](ui_view.png)
+<img src="ui_view.png" alt="GitPalette launcher" width="661" />
 
 ## Features
 
