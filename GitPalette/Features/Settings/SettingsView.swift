@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  GitPalette
 //
-//  原生 Settings：通用 / 语言 / 快捷键 / 关于。
+//  原生 Settings：通用 / 语言 / 快捷键。
 //
 
 import SwiftUI
@@ -33,14 +33,7 @@ struct SettingsView: View {
             .tabItem {
                 Label(preferences.t(.tabHotKey), systemImage: "keyboard")
             }
-            AboutSettingsTab(
-                preferences: preferences,
-                hotkeyDisplayText: hotKeyService.hotkeyDisplayText
-            )
-            .tabItem {
-                Label(preferences.t(.tabAbout), systemImage: "info.circle")
-            }
         }
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 400)
     }
 }

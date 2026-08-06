@@ -47,11 +47,8 @@ struct GitPaletteApp: App {
         }
         .windowResizability(.contentSize)
         Window(preferences.t(.about) + preferences.appName, id: AppWindowID.about) {
-            AboutView(
-                preferences: preferences,
-                hotkeyDisplayText: hotKeyService.hotkeyDisplayText
-            )
-            .applyWindowForegroundFocus()
+            AboutView(preferences: preferences)
+                .applyWindowForegroundFocus()
         }
         .windowResizability(.contentSize)
         Settings {

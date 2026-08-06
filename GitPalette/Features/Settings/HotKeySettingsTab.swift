@@ -41,11 +41,12 @@ struct HotKeySettingsTab: View {
             }
             Section(preferences.t(.sectionAccessibility)) {
                 if hotKeyService.isAccessibilityGranted {
-                    Text(preferences.t(.accessibilityGranted))
-                        .foregroundStyle(.green)
+                    Label(preferences.t(.accessibilityGranted), systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.secondary)
                 } else {
-                    Text(preferences.t(.accessibilityDenied))
+                    Label(preferences.t(.accessibilityDenied), systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
                     Button(preferences.t(.openSystemSettings)) {
                         hotKeyService.executeOpenAccessibilitySettings()
                     }

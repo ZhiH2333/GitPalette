@@ -11,7 +11,6 @@ import Foundation
 enum L10nKey: String, Sendable {
     case tabGeneral
     case tabHotKey
-    case tabAbout
     case tabLanguage
     case sectionAppearance
     case launcherStyle
@@ -43,14 +42,9 @@ enum L10nKey: String, Sendable {
     case accessibilityDenied
     case openSystemSettings
     case recheck
-    case sectionApp
-    case name
-    case globalHotKey
     case menuBarAssistant
-    case sectionMenuBarIcon
-    case menuBarIconHelp
-    case sectionLaterP5
-    case laterP5Help
+    case aboutMenuBarNote
+    case versionFormat
     case openLauncher
     case grantAccessibility
     case copyFormatMenu
@@ -72,7 +66,6 @@ enum L10nKey: String, Sendable {
     case needAccessibilityTitle
     case needAccessibilityBody
     case later
-    case aboutHotKeyLine
     case styleAutomatic
     case styleLiquidGlass
     case styleMaterial
@@ -96,7 +89,6 @@ enum L10n {
     private static let english: [L10nKey: String] = [
         .tabGeneral: "General",
         .tabHotKey: "Hotkey",
-        .tabAbout: "About",
         .tabLanguage: "Language",
         .sectionAppearance: "Appearance",
         .launcherStyle: "Launcher style",
@@ -118,7 +110,7 @@ enum L10n {
         .descriptionLanguage: "Description",
         .languageHintUI: "Controls menus, settings, and launcher chrome text.",
         .languageHintCode: "English keeps :bug:. 简体中文 shows :bug: 缺陷 in the list and when copying code.",
-        .languageHintDescription: "Controls the subtitle under each code, e.g. “Fix a bug.” → “修复一个 Bug。”",
+        .languageHintDescription: "Controls the subtitle under each code, e.g. “Fix a bug.” → “修复一个 Bug.”",
         .sectionLauncherHotKey: "Launcher hotkey",
         .toggleLauncher: "Show / hide launcher",
         .currentHotKey: "Current: ",
@@ -128,14 +120,9 @@ enum L10n {
         .accessibilityDenied: "Not granted: the global hotkey may not work when another app is frontmost",
         .openSystemSettings: "Open System Settings…",
         .recheck: "Recheck",
-        .sectionApp: "App",
-        .name: "Name",
-        .globalHotKey: "Global hotkey",
         .menuBarAssistant: "Menu bar Gitmoji assistant",
-        .sectionMenuBarIcon: "Menu bar icon",
-        .menuBarIconHelp: "GitPalette is a menu bar app (LSUIElement). After launch the icon appears on the right side of the menu bar, not in the Dock. If you cannot find it, check whether other icons are crowding the menu bar, or confirm the process is still running.",
-        .sectionLaterP5: "Later (P5)",
-        .laterP5Help: "AI Provider / API Key features arrive in P5. This stage does not store any secrets.",
+        .aboutMenuBarNote: "Runs in the menu bar and does not appear in the Dock. Look for the palette icon on the right side of the menu bar.",
+        .versionFormat: "Version %@ (%@)",
         .openLauncher: "Open Launcher",
         .grantAccessibility: "Grant Accessibility…",
         .copyFormatMenu: "Copy format",
@@ -157,7 +144,6 @@ enum L10n {
         .needAccessibilityTitle: "Accessibility required",
         .needAccessibilityBody: "The global hotkey needs GitPalette allowed in System Settings → Privacy & Security → Accessibility so it can open the launcher while other apps are frontmost.",
         .later: "Later",
-        .aboutHotKeyLine: "Global hotkey: ",
         .styleAutomatic: "Automatic",
         .styleLiquidGlass: "Liquid Glass",
         .styleMaterial: "Frosted glass",
@@ -169,7 +155,6 @@ enum L10n {
     private static let simplifiedChinese: [L10nKey: String] = [
         .tabGeneral: "通用",
         .tabHotKey: "快捷键",
-        .tabAbout: "关于",
         .tabLanguage: "语言",
         .sectionAppearance: "外观",
         .launcherStyle: "启动器风格",
@@ -201,14 +186,9 @@ enum L10n {
         .accessibilityDenied: "未授予：其他 App 前台时全局热键可能无法使用",
         .openSystemSettings: "打开系统设置…",
         .recheck: "重新检测",
-        .sectionApp: "应用",
-        .name: "名称",
-        .globalHotKey: "全局热键",
         .menuBarAssistant: "菜单栏 Gitmoji 助手",
-        .sectionMenuBarIcon: "菜单栏图标",
-        .menuBarIconHelp: "GitPalette 为菜单栏应用（LSUIElement）。启动后图标显示在菜单栏右侧，Dock 中不会出现图标。若找不到图标，请检查菜单栏是否被其他图标挤占，或确认应用进程仍在运行。",
-        .sectionLaterP5: "后续（P5）",
-        .laterP5Help: "AI Provider / API Key 等能力将在 P5 提供，本阶段不存储任何密钥。",
+        .aboutMenuBarNote: "本应用运行在菜单栏，不会出现在 Dock。请在菜单栏右侧查找调色板图标。",
+        .versionFormat: "版本 %@ (%@)",
         .openLauncher: "打开启动器",
         .grantAccessibility: "授予辅助功能权限…",
         .copyFormatMenu: "复制格式",
@@ -230,7 +210,6 @@ enum L10n {
         .needAccessibilityTitle: "需要辅助功能权限",
         .needAccessibilityBody: "全局热键需要在「系统设置 → 隐私与安全性 → 辅助功能」中允许 GitPalette，才能在其他应用前台时唤起启动器。",
         .later: "稍后",
-        .aboutHotKeyLine: "全局热键：",
         .styleAutomatic: "自动",
         .styleLiquidGlass: "液态玻璃",
         .styleMaterial: "毛玻璃",
