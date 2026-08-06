@@ -20,6 +20,7 @@ final class LauncherController {
     private var keyMonitor: Any?
     private var focusToken: UUID = UUID()
     private var isPresenting: Bool = false
+    private var previousFrontApp: NSRunningApplication?
 
     init(appConfig: AppConfig, repository: GitmojiRepository? = nil) {
         self.appConfig = appConfig
@@ -38,6 +39,7 @@ final class LauncherController {
             executeBringToFront(panel)
             return
         }
+        previousFrontApp = NSWorkspace.shared.frontmostApplication
         viewModel.executeResetForPresentation()
         focusToken = UUID()
         let panel: NSPanel = resolvePanel()
@@ -51,7 +53,8 @@ final class LauncherController {
     }
 
     /// 关闭面板。
-    func dismiss() {
+    /// - Parameter shouldRestoreFocus: 是否把焦点交还唤起前的应用（失焦关闭时为 false）。
+    func dismiss(shouldRestoreFocus: Bool = true) {
         assert(Thread.isMainThread)
         guard isPresenting || panel?.isVisible == true else {
             return
@@ -60,13 +63,18 @@ final class LauncherController {
         executeUnregisterResignObserver()
         panel?.orderOut(nil)
         isPresenting = false
+        if shouldRestoreFocus {
+            executeRestorePreviousAppFocus()
+        } else {
+            previousFrontApp = nil
+        }
     }
 
     /// 切换面板显隐。
     func toggle() {
         assert(Thread.isMainThread)
         if isPresenting, panel?.isVisible == true {
-            dismiss()
+            dismiss(shouldRestoreFocus: true)
         } else {
             present()
         }
@@ -76,8 +84,18 @@ final class LauncherController {
     private func executeConfirmCopy() {
         let didCopy: Bool = viewModel.copySelected()
         if didCopy {
-            dismiss()
+            dismiss(shouldRestoreFocus: true)
         }
+    }
+
+    /// 将焦点交还给唤起前的前台应用，避免 LSUIElement 残留抢焦。
+    private func executeRestorePreviousAppFocus() {
+        let previous: NSRunningApplication? = previousFrontApp
+        previousFrontApp = nil
+        guard let previous, previous.processIdentifier != NSRunningApplication.current.processIdentifier else {
+            return
+        }
+        previous.activate()
     }
 
     /// 获取或创建面板。
@@ -109,7 +127,7 @@ final class LauncherController {
             viewModel: viewModel,
             focusToken: focusToken,
             onDismiss: { [weak self] in
-                self?.dismiss()
+                self?.dismiss(shouldRestoreFocus: true)
             },
             onConfirmCopy: { [weak self] in
                 self?.executeConfirmCopy()
@@ -135,7 +153,7 @@ final class LauncherController {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.dismiss()
+                self?.dismiss(shouldRestoreFocus: false)
             }
         }
     }
@@ -182,7 +200,7 @@ final class LauncherController {
             viewModel.executeSelectNext()
             return nil
         case 53:
-            dismiss()
+            dismiss(shouldRestoreFocus: true)
             return nil
         default:
             return event

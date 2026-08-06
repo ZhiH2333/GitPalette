@@ -15,7 +15,7 @@ final class AppConfig {
 
     /// 应用显示名称
     let appName: String
-    /// 默认全局热键占位字符串（本阶段不注册热键）
+    /// 默认全局热键展示文案（与 HotKeyDefaults 对齐）
     let defaultHotkeyPlaceholder: String
     /// Gitmoji API 地址占位（本阶段不发起网络请求）
     let gitmojiAPIURL: String
@@ -26,7 +26,7 @@ final class AppConfig {
 
     init(
         appName: String = "GitPalette",
-        defaultHotkeyPlaceholder: String = "⌘⇧G",
+        defaultHotkeyPlaceholder: String = HotKeyDefaults.displayText,
         gitmojiAPIURL: String = "https://gitmoji.dev/api/gitmojis",
         copyFormat: CopyFormat? = nil
     ) {
