@@ -6,11 +6,11 @@
 //
 
 import Foundation
-import Observation
+import Combine
 
-/// 应用偏好存储（Observation + UserDefaults）。
-@Observable
-final class PreferencesStore {
+/// 应用偏好存储（ObservableObject + UserDefaults）。
+@MainActor
+final class PreferencesStore: ObservableObject {
     /// 默认自定义模板
     static let defaultCopyTemplate: String = "{emoji} "
     /// 最近使用数量默认 / 范围
@@ -24,16 +24,20 @@ final class PreferencesStore {
     /// Gitmoji API 地址占位
     let gitmojiAPIURL: String
     /// 复制格式
-    var copyFormat: CopyFormat {
+    @Published var copyFormat: CopyFormat {
         didSet { executePersistCopyFormat() }
     }
     /// 自定义模板（占位符：{emoji} {code} {name} {description}）
-    var copyTemplate: String {
+    @Published var copyTemplate: String {
         didSet { executePersistCopyTemplate() }
     }
     /// 最近使用最大条数
-    var recentMaxCount: Int {
+    @Published var recentMaxCount: Int {
         didSet { executePersistRecentMaxCount() }
+    }
+    /// 启动器外观风格
+    @Published var appearanceStyle: AppearanceStyle {
+        didSet { executePersistAppearanceStyle() }
     }
 
     init(
@@ -47,6 +51,7 @@ final class PreferencesStore {
         self.copyFormat = Self.executeLoadCopyFormat()
         self.copyTemplate = Self.executeLoadCopyTemplate()
         self.recentMaxCount = Self.executeLoadRecentMaxCount()
+        self.appearanceStyle = Self.executeLoadAppearanceStyle()
     }
 
     /// 按当前格式生成复制文本。
@@ -90,6 +95,10 @@ final class PreferencesStore {
         UserDefaults.standard.set(clamped, forKey: PreferencesKeys.recentMaxCount)
     }
 
+    private func executePersistAppearanceStyle() {
+        UserDefaults.standard.set(appearanceStyle.rawValue, forKey: PreferencesKeys.appearanceStyle)
+    }
+
     private static func executeLoadCopyFormat() -> CopyFormat {
         guard let raw: String = UserDefaults.standard.string(forKey: PreferencesKeys.copyFormat) else {
             return .emoji
@@ -125,6 +134,13 @@ final class PreferencesStore {
             max(stored, recentMaxCountRange.lowerBound),
             recentMaxCountRange.upperBound
         )
+    }
+
+    private static func executeLoadAppearanceStyle() -> AppearanceStyle {
+        guard let raw: String = UserDefaults.standard.string(forKey: PreferencesKeys.appearanceStyle) else {
+            return .automatic
+        }
+        return AppearanceStyle(rawValue: raw) ?? .automatic
     }
 }
 

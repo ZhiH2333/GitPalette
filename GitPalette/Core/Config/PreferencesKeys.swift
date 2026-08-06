@@ -13,4 +13,5 @@ enum PreferencesKeys {
     static let copyTemplate: String = "gitpalette.copyTemplate"
     static let recentMaxCount: String = "gitpalette.recentMaxCount"
     static let recentGitmojiCodes: String = "gitpalette.recentGitmojiCodes"
+    static let appearanceStyle: String = "gitpalette.appearanceStyle"
 }

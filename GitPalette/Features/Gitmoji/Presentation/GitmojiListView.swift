@@ -2,31 +2,31 @@
 //  GitmojiListView.swift
 //  GitPalette
 //
-//  可搜索 Gitmoji 列表（供启动器浮动面板承载）。
+//  Spotlight 风格可搜索 Gitmoji 列表（供启动器浮动面板承载）。
 //
 
 import SwiftUI
 
 /// Gitmoji 搜索与复制主界面。
 struct GitmojiListView: View {
-    @Bindable var appConfig: AppConfig
-    @Bindable var viewModel: GitmojiListViewModel
+    @ObservedObject var appConfig: AppConfig
+    @ObservedObject var viewModel: GitmojiListViewModel
     let focusToken: UUID
     let onDismiss: () -> Void
     let onConfirmCopy: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            buildToolbar()
-            Divider().opacity(0.35)
+            buildSpotlightSearchRow()
+            Divider().opacity(0.22)
             if shouldShowRecentSection {
                 buildRecentSection()
-                Divider().opacity(0.35)
+                Divider().opacity(0.18)
             }
             buildResultArea()
             buildFooter()
         }
-        .frame(width: 560, height: 420)
+        .frame(width: LauncherChrome.contentWidth, height: LauncherChrome.contentHeight)
     }
 
     /// 是否展示最近使用区。
@@ -36,41 +36,37 @@ struct GitmojiListView: View {
             && !viewModel.isDataEmpty
     }
 
-    /// 构建顶部搜索与格式切换。
+    /// Spotlight 风格搜索行：放大镜 + 大字号输入 + 清除。
     @ViewBuilder
-    private func buildToolbar() -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func buildSpotlightSearchRow() -> some View {
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: LauncherChrome.searchIconPointSize, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 28, alignment: .center)
             GitmojiSearchField(
                 text: $viewModel.query,
-                placeholder: "搜索 Gitmoji…",
+                placeholder: "搜索 Gitmoji",
                 focusToken: focusToken,
                 onSubmit: onConfirmCopy,
                 onCancel: onDismiss
             )
-            .frame(height: 28)
-            .padding(.horizontal, 4)
-            .padding(.vertical, 6)
-            HStack {
-                Text("复制格式")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Picker("复制格式", selection: $appConfig.copyFormat) {
-                    ForEach(CopyFormat.allCases) { format in
-                        Text(format.displayName).tag(format)
-                    }
+            .frame(maxWidth: .infinity, minHeight: 28)
+            if !viewModel.query.isEmpty {
+                Button {
+                    viewModel.query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.secondary)
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(maxWidth: 160)
-                Spacer(minLength: 0)
-                Text("↑↓ 选择 · ⏎ 复制 · Esc 关闭")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                .buttonStyle(.plain)
+                .help("清除")
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(minHeight: LauncherChrome.searchRowMinHeight)
     }
 
     /// 构建最近使用区。
@@ -78,8 +74,9 @@ struct GitmojiListView: View {
     private func buildRecentSection() -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("最近使用")
-                .font(.caption)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(viewModel.recentItems) { item in
@@ -89,7 +86,8 @@ struct GitmojiListView: View {
                         } label: {
                             Text(item.emoji)
                                 .font(.title2)
-                                .padding(6)
+                                .frame(width: 40, height: 40)
+                                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .help(item.code)
@@ -98,7 +96,7 @@ struct GitmojiListView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
     }
 
     /// 构建结果区（列表或空态）。
@@ -146,27 +144,39 @@ struct GitmojiListView: View {
                             }
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .padding(.horizontal, LauncherChrome.listHorizontalPadding)
+                .padding(.vertical, 6)
             }
-            .onChange(of: viewModel.selectedIndex) { _, newValue in
+            .onChangeCompat(of: viewModel.selectedIndex) { newValue in
                 executeScrollToSelection(proxy: proxy, index: newValue)
             }
         }
     }
 
-    /// 构建底部状态栏。
+    /// 构建底部状态栏（格式切换 + 计数，不抢搜索焦点）。
     @ViewBuilder
     private func buildFooter() -> some View {
-        HStack {
+        HStack(spacing: 10) {
+            Picker("复制格式", selection: $appConfig.copyFormat) {
+                ForEach(CopyFormat.allCases) { format in
+                    Text(format.displayName).tag(format)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(maxWidth: 140)
             Text(resolveFooterCountText())
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Spacer()
+            Spacer(minLength: 0)
             if let feedback: String = viewModel.copyFeedbackText {
                 Text(feedback)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.green)
+            } else {
+                Text("⏎ 复制")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.horizontal, 16)
@@ -181,7 +191,7 @@ struct GitmojiListView: View {
         if viewModel.filtered.isEmpty {
             return "无结果"
         }
-        return "共 \(viewModel.filtered.count) 项 · 第 \(viewModel.selectedIndex + 1) 项"
+        return "\(viewModel.filtered.count) 项"
     }
 
     /// 将选中行滚入可视区域。

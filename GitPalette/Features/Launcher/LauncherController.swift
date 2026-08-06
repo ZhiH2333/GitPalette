@@ -10,13 +10,12 @@ import SwiftUI
 
 /// 启动器面板控制器（主线程 API）。
 @MainActor
-@Observable
 final class LauncherController {
     private let appConfig: AppConfig
     private let recentStore: RecentGitmojiStore
     private let viewModel: GitmojiListViewModel
     private var panel: NSPanel?
-    private var hostingController: NSHostingController<LauncherPanelContentView>?
+    private var hostingView: TransparentHostingView<LauncherPanelContentView>?
     private var resignObserver: NSObjectProtocol?
     private var keyMonitor: Any?
     private var activationObserver: NSObjectProtocol?
@@ -69,6 +68,7 @@ final class LauncherController {
         viewModel.executeResetForPresentation()
         focusToken = UUID()
         let panel: NSPanel = resolvePanel()
+        executeSyncPanelSize(panel)
         executeRefreshHostingContent()
         LauncherPanelFactory.executeCenterOnMouseScreen(panel)
         executeRegisterResignObserver(for: panel)
@@ -169,23 +169,23 @@ final class LauncherController {
             return panel
         }
         let created: LauncherPanel = LauncherPanelFactory.makePanel()
-        let hosting: NSHostingController<LauncherPanelContentView> = NSHostingController(
+        let hosting: TransparentHostingView<LauncherPanelContentView> = TransparentHostingView(
             rootView: buildContentView()
         )
-        hosting.view.frame = NSRect(origin: .zero, size: LauncherPanelFactory.panelSize)
-        hosting.view.autoresizingMask = [.width, .height]
-        created.contentView = hosting.view
+        hosting.frame = NSRect(origin: .zero, size: LauncherPanelFactory.panelSize)
+        hosting.autoresizingMask = [.width, .height]
+        created.contentView = hosting
         created.onCancelOperation = { [weak self] in
             self?.dismiss(shouldRestoreFocus: true)
         }
         self.panel = created
-        self.hostingController = hosting
+        self.hostingView = hosting
         return created
     }
 
     /// 刷新 Hosting 根视图（焦点令牌 / 回调）。
     private func executeRefreshHostingContent() {
-        hostingController?.rootView = buildContentView()
+        hostingView?.rootView = buildContentView()
     }
 
     /// 构建面板 SwiftUI 内容。
@@ -201,6 +201,13 @@ final class LauncherController {
                 self?.executeConfirmCopy()
             }
         )
+    }
+
+    /// 同步面板与 Hosting 尺寸到当前 Chrome 常量。
+    private func executeSyncPanelSize(_ panel: NSPanel) {
+        let size: NSSize = LauncherPanelFactory.panelSize
+        hostingView?.frame = NSRect(origin: .zero, size: size)
+        panel.setContentSize(size)
     }
 
     /// 将已显示面板置前并刷新焦点。

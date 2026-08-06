@@ -9,8 +9,8 @@ import SwiftUI
 
 /// 启动器面板内容根视图。
 struct LauncherPanelContentView: View {
-    @Bindable var appConfig: AppConfig
-    @Bindable var viewModel: GitmojiListViewModel
+    @ObservedObject var appConfig: AppConfig
+    @ObservedObject var viewModel: GitmojiListViewModel
     let focusToken: UUID
     let onDismiss: () -> Void
     let onConfirmCopy: () -> Void
@@ -23,7 +23,9 @@ struct LauncherPanelContentView: View {
             onDismiss: onDismiss,
             onConfirmCopy: onConfirmCopy
         )
-        .applyLauncherGlassShell()
-        .padding(2)
+        .applyLauncherGlassShell(style: appConfig.appearanceStyle)
+        // 仅留阴影绘制空间；根必须全透明，否则圆角外会出现方形遮罩。
+        .padding(LauncherChrome.shadowBleed)
+        .background(Color.clear)
     }
 }

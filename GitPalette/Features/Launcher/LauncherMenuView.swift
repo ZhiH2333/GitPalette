@@ -10,9 +10,9 @@ import SwiftUI
 
 /// 菜单栏 Extra 菜单视图。
 struct LauncherMenuView: View {
-    @Bindable var preferences: PreferencesStore
+    @ObservedObject var preferences: PreferencesStore
     var launcherController: LauncherController
-    var hotKeyService: HotKeyService
+    @ObservedObject var hotKeyService: HotKeyService
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -36,9 +36,7 @@ struct LauncherMenuView: View {
             }
         }
         Divider()
-        SettingsLink {
-            Text("设置…")
-        }
+        buildSettingsButton()
         Button("关于 \(preferences.appName)") {
             openWindow(id: AppWindowID.about)
         }
@@ -49,11 +47,25 @@ struct LauncherMenuView: View {
         .onAppear {
             executeBootstrapHotKey()
         }
-        .onChange(of: hotKeyService.permissionGuideToken) { _, token in
+        .onChangeCompat(of: hotKeyService.permissionGuideToken) { token in
             guard token != nil else {
                 return
             }
             executeOpenAccessibilityWindow()
+        }
+    }
+
+    /// 设置入口（macOS 14+ SettingsLink，更低系统回退按钮）。
+    @ViewBuilder
+    private func buildSettingsButton() -> some View {
+        if #available(macOS 14.0, *) {
+            SettingsLink {
+                Text("设置…")
+            }
+        } else {
+            Button("设置…") {
+                SettingsWindowOpener.executeOpen()
+            }
         }
     }
 

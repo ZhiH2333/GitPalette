@@ -6,26 +6,25 @@
 //
 
 import AppKit
+import Combine
 import Foundation
-import Observation
 
 /// Gitmoji 可搜索列表 ViewModel。
-@Observable
 @MainActor
-final class GitmojiListViewModel {
+final class GitmojiListViewModel: ObservableObject {
     /// 搜索关键词
-    var query: String = "" {
+    @Published var query: String = "" {
         didSet {
             selectedIndex = 0
             executeClampSelectedIndex()
         }
     }
     /// 当前选中行（相对 filtered）
-    var selectedIndex: Int = 0
+    @Published var selectedIndex: Int = 0
     /// 复制成功提示文案
-    var copyFeedbackText: String?
+    @Published var copyFeedbackText: String?
     /// 最近使用条目
-    private(set) var recentItems: [Gitmoji] = []
+    @Published private(set) var recentItems: [Gitmoji] = []
     private let repository: GitmojiRepository
     private let recentStore: RecentGitmojiStore
     private let appConfig: AppConfig
@@ -134,7 +133,7 @@ final class GitmojiListViewModel {
         copyFeedbackText = "已复制"
         feedbackClearTask?.cancel()
         feedbackClearTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.2))
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
             if !Task.isCancelled {
                 copyFeedbackText = nil
             }

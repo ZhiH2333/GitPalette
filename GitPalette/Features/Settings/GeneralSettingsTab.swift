@@ -2,18 +2,30 @@
 //  GeneralSettingsTab.swift
 //  GitPalette
 //
-//  设置 · 通用：复制格式、最近使用。
+//  设置 · 通用：外观、复制格式、最近使用。
 //
 
 import SwiftUI
 
 /// 通用设置页。
 struct GeneralSettingsTab: View {
-    @Bindable var preferences: PreferencesStore
+    @ObservedObject var preferences: PreferencesStore
     var launcherController: LauncherController
 
     var body: some View {
         Form {
+            Section("外观") {
+                Picker("启动器风格", selection: $preferences.appearanceStyle) {
+                    ForEach(AppearanceStyle.allCases) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(resolveAppearanceHint())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Section("复制格式") {
                 Picker("格式", selection: $preferences.copyFormat) {
                     ForEach(CopyFormat.allCases) { format in
@@ -38,7 +50,7 @@ struct GeneralSettingsTab: View {
                 ) {
                     Text("保留数量：\(preferences.recentMaxCount)")
                 }
-                .onChange(of: preferences.recentMaxCount) { _, _ in
+                .onChangeCompat(of: preferences.recentMaxCount) { _ in
                     launcherController.executeReloadRecentItems()
                 }
                 Button("清空最近使用", role: .destructive) {
@@ -48,6 +60,14 @@ struct GeneralSettingsTab: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    /// 外观选项说明。
+    private func resolveAppearanceHint() -> String {
+        if AppearanceStyle.isLiquidGlassAvailable {
+            return "自动：在 macOS 26 使用液态玻璃，更低系统使用毛玻璃。也可手动固定风格。"
+        }
+        return "当前系统不支持液态玻璃；选择「液态玻璃」时会回退为毛玻璃。升级到 macOS 26 后可使用液态玻璃。"
     }
 
     /// 用固定样例预览模板效果。

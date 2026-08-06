@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 辅助功能权限引导视图。
 struct AccessibilityPermissionView: View {
-    var hotKeyService: HotKeyService
+    @ObservedObject var hotKeyService: HotKeyService
     var onDismiss: (() -> Void)?
 
     var body: some View {

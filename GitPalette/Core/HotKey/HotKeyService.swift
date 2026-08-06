@@ -6,24 +6,23 @@
 //
 
 import AppKit
+import Combine
 import Foundation
 import KeyboardShortcuts
-import Observation
 
 /// 全局热键服务。
 @MainActor
-@Observable
-final class HotKeyService {
+final class HotKeyService: ObservableObject {
     private static let didShowGuideKey: String = "gitpalette.didShowAccessibilityGuide"
 
     /// 是否已授予辅助功能权限
-    private(set) var isAccessibilityGranted: Bool = false
+    @Published private(set) var isAccessibilityGranted: Bool = false
     /// 热键与系统快捷键冲突时的中文提示；无冲突为 nil
-    private(set) var conflictHint: String?
+    @Published private(set) var conflictHint: String?
     /// 当前热键展示文案
-    private(set) var hotkeyDisplayText: String = HotKeyDefaults.displayText
+    @Published private(set) var hotkeyDisplayText: String = HotKeyDefaults.displayText
     /// 变化时 UI 应打开权限引导窗
-    private(set) var permissionGuideToken: UUID?
+    @Published private(set) var permissionGuideToken: UUID?
     private let accessibilityService: AccessibilityPermissionService
     private var onToggle: (() -> Void)?
     private var didRegisterHandler: Bool = false

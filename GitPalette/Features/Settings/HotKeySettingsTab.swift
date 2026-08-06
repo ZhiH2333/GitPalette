@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 快捷键设置页。
 struct HotKeySettingsTab: View {
-    var hotKeyService: HotKeyService
+    @ObservedObject var hotKeyService: HotKeyService
 
     var body: some View {
         Form {

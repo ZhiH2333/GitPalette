@@ -1,0 +1,37 @@
+//
+//  LauncherChrome.swift
+//  GitPalette
+//
+//  启动器 Spotlight 风格尺寸与外观常量（液态玻璃 / 毛玻璃共用）。
+//
+
+import CoreGraphics
+
+/// 启动器视觉度量（贴近系统 Spotlight）。
+enum LauncherChrome {
+    /// 外壳圆角（Spotlight / Raycast 级大圆角）
+    static let cornerRadius: CGFloat = 28
+    /// 内容宽度
+    static let contentWidth: CGFloat = 640
+    /// 内容高度
+    static let contentHeight: CGFloat = 440
+    /// 阴影外扩（需盖住远距 blur，圆角外保持透明）
+    static let shadowBleed: CGFloat = 44
+    /// 远距阴影模糊半径
+    static let shadowFarBlur: CGFloat = 34
+    /// 近距接触阴影模糊半径
+    static let shadowNearBlur: CGFloat = 12
+    /// Hosting / Panel 外框（含阴影边距）
+    static let panelWidth: CGFloat = contentWidth + shadowBleed * 2
+    static let panelHeight: CGFloat = contentHeight + shadowBleed * 2
+    /// 搜索行高度
+    static let searchRowMinHeight: CGFloat = 58
+    /// 搜索放大镜字号
+    static let searchIconPointSize: CGFloat = 22
+    /// 搜索文字字号
+    static let searchTextPointSize: CGFloat = 22
+    /// 列表选中圆角
+    static let rowCornerRadius: CGFloat = 10
+    /// 列表水平内边距
+    static let listHorizontalPadding: CGFloat = 12
+}

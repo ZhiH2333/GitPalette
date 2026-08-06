@@ -9,8 +9,11 @@ import AppKit
 
 /// 启动器面板工厂。
 enum LauncherPanelFactory {
-    /// 面板默认尺寸。
-    static let panelSize: NSSize = NSSize(width: 568, height: 428)
+    /// 面板默认尺寸（与 LauncherChrome 对齐）。
+    static let panelSize: NSSize = NSSize(
+        width: LauncherChrome.panelWidth,
+        height: LauncherChrome.panelHeight
+    )
 
     /// 创建 borderless 浮动面板（需成为 key 以支持输入；失焦由 Controller 关闭）。
     static func makePanel() -> LauncherPanel {
@@ -27,7 +30,8 @@ enum LauncherPanelFactory {
         panel.isMovableByWindowBackground = true
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        // 圆角阴影由 SwiftUI 外壳负责，避免 AppKit 矩形阴影穿帮。
+        panel.hasShadow = false
         panel.hidesOnDeactivate = false
         panel.becomesKeyOnlyIfNeeded = false
         panel.titleVisibility = .hidden

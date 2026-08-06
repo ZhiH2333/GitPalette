@@ -2,7 +2,7 @@
 //  GitmojiRowView.swift
 //  GitPalette
 //
-//  单行 Gitmoji 展示。
+//  单行 Gitmoji 展示（Spotlight 级选中圆角）。
 //
 
 import SwiftUI
@@ -13,13 +13,13 @@ struct GitmojiRowView: View {
     let isSelected: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             Text(item.emoji)
                 .font(.title2)
-                .frame(width: 36, alignment: .center)
+                .frame(width: 40, alignment: .center)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.code)
-                    .font(.body.monospaced())
+                    .font(.body.weight(.medium).monospaced())
                 Text(item.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -27,10 +27,14 @@ struct GitmojiRowView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(isSelected ? Color.accentColor.opacity(0.18) : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .background(
+            isSelected
+                ? Color.accentColor.opacity(0.22)
+                : Color.clear,
+            in: RoundedRectangle(cornerRadius: LauncherChrome.rowCornerRadius, style: .continuous)
+        )
         .contentShape(Rectangle())
     }
 }

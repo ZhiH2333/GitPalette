@@ -2,14 +2,13 @@
 //  GitmojiSearchField.swift
 //  GitPalette
 //
-//  AppKit 搜索框：由 doCommandBy(cancelOperation:) 处理 Esc，
-//  避免 local monitor 吞掉 Esc（会导致系统提示音）。
+//  AppKit 搜索框：Spotlight 大字号；Esc 走 doCommandBy，避免系统提示音。
 //
 
 import AppKit
 import SwiftUI
 
-/// Esc 安全的搜索输入框（AppKit 桥接）。
+/// Esc 安全的 Spotlight 风格搜索输入框（AppKit 桥接）。
 struct GitmojiSearchField: NSViewRepresentable {
     @Binding var text: String
     let placeholder: String
@@ -23,9 +22,12 @@ struct GitmojiSearchField: NSViewRepresentable {
         field.isBezeled = false
         field.drawsBackground = false
         field.focusRingType = .none
-        field.font = .preferredFont(forTextStyle: .title3, options: [:])
+        field.font = .systemFont(ofSize: LauncherChrome.searchTextPointSize, weight: .regular)
         field.placeholderString = placeholder
         field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        field.cell?.wraps = false
+        field.cell?.isScrollable = true
         field.delegate = context.coordinator
         field.target = context.coordinator
         field.action = #selector(Coordinator.executeSubmit)
@@ -36,6 +38,8 @@ struct GitmojiSearchField: NSViewRepresentable {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
+        nsView.font = .systemFont(ofSize: LauncherChrome.searchTextPointSize, weight: .regular)
+        nsView.placeholderString = placeholder
         context.coordinator.onSubmit = onSubmit
         context.coordinator.onCancel = onCancel
         context.coordinator.executeSyncFocus(focusToken: focusToken, field: nsView)

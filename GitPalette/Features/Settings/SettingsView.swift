@@ -9,28 +9,31 @@ import SwiftUI
 
 /// 设置窗口根视图（系统标准 Tab，不过度玻璃化）。
 struct SettingsView: View {
-    @Bindable var preferences: PreferencesStore
-    var hotKeyService: HotKeyService
+    @ObservedObject var preferences: PreferencesStore
+    @ObservedObject var hotKeyService: HotKeyService
     var launcherController: LauncherController
 
     var body: some View {
         TabView {
-            Tab("通用", systemImage: "gearshape") {
-                GeneralSettingsTab(
-                    preferences: preferences,
-                    launcherController: launcherController
-                )
+            GeneralSettingsTab(
+                preferences: preferences,
+                launcherController: launcherController
+            )
+            .tabItem {
+                Label("通用", systemImage: "gearshape")
             }
-            Tab("快捷键", systemImage: "keyboard") {
-                HotKeySettingsTab(hotKeyService: hotKeyService)
-            }
-            Tab("关于", systemImage: "info.circle") {
-                AboutSettingsTab(
-                    preferences: preferences,
-                    hotkeyDisplayText: hotKeyService.hotkeyDisplayText
-                )
+            HotKeySettingsTab(hotKeyService: hotKeyService)
+                .tabItem {
+                    Label("快捷键", systemImage: "keyboard")
+                }
+            AboutSettingsTab(
+                preferences: preferences,
+                hotkeyDisplayText: hotKeyService.hotkeyDisplayText
+            )
+            .tabItem {
+                Label("关于", systemImage: "info.circle")
             }
         }
-        .frame(width: 460, height: 360)
+        .frame(width: 460, height: 400)
     }
 }

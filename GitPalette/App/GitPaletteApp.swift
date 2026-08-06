@@ -9,25 +9,23 @@ import SwiftUI
 
 @main
 struct GitPaletteApp: App {
-    @State private var preferences: PreferencesStore
-    @State private var recentStore: RecentGitmojiStore
-    @State private var launcherController: LauncherController
-    @State private var hotKeyService: HotKeyService
+    @StateObject private var preferences: PreferencesStore
+    @StateObject private var hotKeyService: HotKeyService
+    private let recentStore: RecentGitmojiStore
+    private let launcherController: LauncherController
 
     init() {
         let preferences: PreferencesStore = PreferencesStore()
         let recentStore: RecentGitmojiStore = RecentGitmojiStore(
             resolveMaxCount: { preferences.recentMaxCount }
         )
-        _preferences = State(initialValue: preferences)
-        _recentStore = State(initialValue: recentStore)
-        _launcherController = State(
-            initialValue: LauncherController(
-                appConfig: preferences,
-                recentStore: recentStore
-            )
+        _preferences = StateObject(wrappedValue: preferences)
+        _hotKeyService = StateObject(wrappedValue: HotKeyService())
+        self.recentStore = recentStore
+        self.launcherController = LauncherController(
+            appConfig: preferences,
+            recentStore: recentStore
         )
-        _hotKeyService = State(initialValue: HotKeyService())
     }
 
     var body: some Scene {
