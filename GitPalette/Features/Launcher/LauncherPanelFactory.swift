@@ -37,7 +37,39 @@ enum LauncherPanelFactory {
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isReleasedWhenClosed = false
+        // 交给系统窗口动画（macOS 26+ 为默认开窗动效）。
+        panel.animationBehavior = resolveAnimationBehavior()
+        panel.alphaValue = 1
         return panel
+    }
+
+    /// 解析系统窗口动画行为：26+ 用文档窗口默认开合；更低系统用 utility 淡入淡出。
+    static func resolveAnimationBehavior() -> NSWindow.AnimationBehavior {
+        if #available(macOS 26.0, *) {
+            return .documentWindow
+        }
+        return .utilityWindow
+    }
+
+    /// 关闭后交还焦点的延迟，避免打断系统关窗动画。
+    static func resolveDismissFocusDelay() -> TimeInterval {
+        if #available(macOS 26.0, *) {
+            return 0.28
+        }
+        return 0.16
+    }
+
+    /// 以系统动画显示面板。
+    static func executePresentAnimated(_ panel: NSPanel) {
+        panel.animationBehavior = resolveAnimationBehavior()
+        panel.alphaValue = 1
+        panel.makeKeyAndOrderFront(nil)
+    }
+
+    /// 以系统动画隐藏面板。
+    static func executeDismissAnimated(_ panel: NSPanel) {
+        panel.animationBehavior = resolveAnimationBehavior()
+        panel.orderOut(nil)
     }
 
     /// 将面板在鼠标所在屏幕居中（略偏上，贴近 Spotlight）。

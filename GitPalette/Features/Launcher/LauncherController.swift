@@ -74,7 +74,7 @@ final class LauncherController {
         executeRegisterResignObserver(for: panel)
         executeRegisterKeyMonitor()
         NSApp.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
+        LauncherPanelFactory.executePresentAnimated(panel)
         isPresenting = true
     }
 
@@ -88,12 +88,15 @@ final class LauncherController {
         executeUnregisterKeyMonitor()
         executeUnregisterResignObserver()
         panel?.makeFirstResponder(nil)
-        panel?.orderOut(nil)
+        if let panel {
+            LauncherPanelFactory.executeDismissAnimated(panel)
+        }
         isPresenting = false
         if shouldRestoreFocus {
             let previous: NSRunningApplication? = previousFrontApp
             previousFrontApp = nil
-            DispatchQueue.main.async {
+            let delay: TimeInterval = LauncherPanelFactory.resolveDismissFocusDelay()
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 self.executeRestoreAppFocus(previous)
             }
         } else {
@@ -216,7 +219,7 @@ final class LauncherController {
         executeRefreshHostingContent()
         executeRegisterKeyMonitor()
         NSApp.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
+        LauncherPanelFactory.executePresentAnimated(panel)
     }
 
     /// 监听失焦以关闭面板。
