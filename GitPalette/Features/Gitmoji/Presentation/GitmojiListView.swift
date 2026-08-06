@@ -19,7 +19,7 @@ struct GitmojiListView: View {
         VStack(spacing: 0) {
             buildSpotlightSearchRow()
             Divider().opacity(0.22)
-            if shouldShowRecentSection {
+            if viewModel.shouldShowRecentSection {
                 buildRecentSection()
                 Divider().opacity(0.18)
             }
@@ -27,13 +27,6 @@ struct GitmojiListView: View {
             buildFooter()
         }
         .frame(width: LauncherChrome.contentWidth, height: LauncherChrome.contentHeight)
-    }
-
-    /// 是否展示最近使用区。
-    private var shouldShowRecentSection: Bool {
-        viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !viewModel.recentItems.isEmpty
-            && !viewModel.isDataEmpty
     }
 
     /// Spotlight 风格搜索行：放大镜 + 大字号输入 + 清除。
@@ -69,7 +62,7 @@ struct GitmojiListView: View {
         .frame(minHeight: LauncherChrome.searchRowMinHeight)
     }
 
-    /// 构建最近使用区。
+    /// 构建最近使用区（支持键盘左右选中）。
     @ViewBuilder
     private func buildRecentSection() -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -77,26 +70,63 @@ struct GitmojiListView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(viewModel.recentItems) { item in
-                        Button {
-                            viewModel.executeCopy(item)
-                            onDismiss()
-                        } label: {
-                            Text(item.emoji)
-                                .font(.title2)
-                                .frame(width: 40, height: 40)
-                                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Array(viewModel.recentItems.enumerated()), id: \.element.id) { index, item in
+                            Button {
+                                viewModel.executeSelectRecentIndex(index)
+                                viewModel.executeCopy(item)
+                                onDismiss()
+                            } label: {
+                                Text(item.emoji)
+                                    .font(.title2)
+                                    .frame(width: 40, height: 40)
+                                    .background(
+                                        resolveRecentItemBackground(isSelected: isRecentSelected(index)),
+                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    )
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .strokeBorder(
+                                                isRecentSelected(index)
+                                                    ? Color.accentColor.opacity(0.85)
+                                                    : Color.clear,
+                                                lineWidth: 1.5
+                                            )
+                                    }
+                            }
+                            .buttonStyle(.plain)
+                            .help(item.code)
+                            .id(item.id)
                         }
-                        .buttonStyle(.plain)
-                        .help(item.code)
+                    }
+                }
+                .onChangeCompat(of: viewModel.recentSelectedIndex) { newValue in
+                    executeScrollToRecentSelection(proxy: proxy, index: newValue)
+                }
+                .onChangeCompat(of: viewModel.selectionFocus) { focus in
+                    if focus == .recent {
+                        executeScrollToRecentSelection(proxy: proxy, index: viewModel.recentSelectedIndex)
                     }
                 }
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    /// 最近项是否处于键盘选中。
+    private func isRecentSelected(_ index: Int) -> Bool {
+        viewModel.selectionFocus == .recent && index == viewModel.recentSelectedIndex
+    }
+
+    /// 最近项背景。
+    private func resolveRecentItemBackground(isSelected: Bool) -> Color {
+        if isSelected {
+            return Color.accentColor.opacity(0.22)
+        }
+        return Color.primary.opacity(0.06)
     }
 
     /// 构建结果区（列表或空态）。
@@ -134,21 +164,33 @@ struct GitmojiListView: View {
             ScrollView {
                 LazyVStack(spacing: 2) {
                     ForEach(Array(viewModel.filtered.enumerated()), id: \.element.id) { index, item in
-                        GitmojiRowView(item: item, isSelected: index == viewModel.selectedIndex)
-                            .id(item.id)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.executeSelectIndex(index)
-                                viewModel.executeCopy(item)
-                                onDismiss()
-                            }
+                        GitmojiRowView(
+                            item: item,
+                            isSelected: viewModel.selectionFocus == .list
+                                && index == viewModel.selectedIndex
+                        )
+                        .id(item.id)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.executeSelectIndex(index)
+                            viewModel.executeCopy(item)
+                            onDismiss()
+                        }
                     }
                 }
                 .padding(.horizontal, LauncherChrome.listHorizontalPadding)
                 .padding(.vertical, 6)
             }
             .onChangeCompat(of: viewModel.selectedIndex) { newValue in
+                guard viewModel.selectionFocus == .list else {
+                    return
+                }
                 executeScrollToSelection(proxy: proxy, index: newValue)
+            }
+            .onChangeCompat(of: viewModel.selectionFocus) { focus in
+                if focus == .list {
+                    executeScrollToSelection(proxy: proxy, index: viewModel.selectedIndex)
+                }
             }
         }
     }
@@ -174,7 +216,7 @@ struct GitmojiListView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.green)
             } else {
-                Text("⏎ 复制")
+                Text(resolveHintText())
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -191,12 +233,34 @@ struct GitmojiListView: View {
         if viewModel.filtered.isEmpty {
             return "无结果"
         }
+        if viewModel.selectionFocus == .recent {
+            return "最近 \(viewModel.recentItems.count) 项"
+        }
         return "\(viewModel.filtered.count) 项"
+    }
+
+    /// 底部操作提示。
+    private func resolveHintText() -> String {
+        if viewModel.shouldShowRecentSection {
+            return "↑↓←→ 选择 · ⏎ 复制"
+        }
+        return "↑↓ 选择 · ⏎ 复制"
     }
 
     /// 将选中行滚入可视区域。
     private func executeScrollToSelection(proxy: ScrollViewProxy, index: Int) {
         let items: [Gitmoji] = viewModel.filtered
+        guard items.indices.contains(index) else {
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.12)) {
+            proxy.scrollTo(items[index].id, anchor: .center)
+        }
+    }
+
+    /// 将最近选中项滚入可视区域。
+    private func executeScrollToRecentSelection(proxy: ScrollViewProxy, index: Int) {
+        let items: [Gitmoji] = viewModel.recentItems
         guard items.indices.contains(index) else {
             return
         }

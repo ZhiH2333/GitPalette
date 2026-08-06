@@ -260,7 +260,7 @@ final class LauncherController {
         }
     }
 
-    /// 处理 ↑↓；Esc 原样放行给字段编辑器。
+    /// 处理 ↑↓←→；Esc 原样放行给字段编辑器。
     private func executeHandleKeyEvent(_ event: NSEvent) -> NSEvent? {
         guard isPresenting, panel?.isKeyWindow == true else {
             return event
@@ -279,6 +279,18 @@ final class LauncherController {
             return nil
         case 125:
             viewModel.executeSelectNext()
+            return nil
+        case 123:
+            guard viewModel.selectionFocus == .recent else {
+                return event
+            }
+            viewModel.executeSelectLeft()
+            return nil
+        case 124:
+            guard viewModel.selectionFocus == .recent else {
+                return event
+            }
+            viewModel.executeSelectRight()
             return nil
         default:
             return event
