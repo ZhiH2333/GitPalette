@@ -47,6 +47,10 @@ struct HotKeySettingsTab: View {
                     Label(preferences.t(.accessibilityDenied), systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
+                    Button(preferences.t(.grantAccessibility)) {
+                        hotKeyService.executeOpenAccessibilitySettings()
+                    }
+                    .keyboardShortcut(.defaultAction)
                     Button(preferences.t(.openSystemSettings)) {
                         hotKeyService.executeOpenAccessibilitySettings()
                     }

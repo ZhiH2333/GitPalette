@@ -30,7 +30,7 @@ struct AccessibilityPermissionView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
-                Button(preferences.t(.openSystemSettings)) {
+                Button(preferences.t(.grantAccessibility)) {
                     hotKeyService.executeOpenAccessibilitySettings()
                 }
                 .keyboardShortcut(.defaultAction)

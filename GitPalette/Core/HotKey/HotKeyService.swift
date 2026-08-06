@@ -60,9 +60,10 @@ final class HotKeyService: ObservableObject {
         executeRefreshStatus()
     }
 
-    /// 打开系统辅助功能设置页。
+    /// 请求权限并打开系统辅助功能设置页。
     func executeOpenAccessibilitySettings() {
-        accessibilityService.executeOpenAccessibilitySettings()
+        accessibilityService.executeRequestAccessAndOpenSettings()
+        executeRefreshStatus()
     }
 
     /// 重置为默认热键 ⌘⇧G。
