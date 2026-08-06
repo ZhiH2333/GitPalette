@@ -1,13 +1,13 @@
 # GitPalette
 
-面向 macOS 的菜单栏 Gitmoji 助手（Menu Bar Agent）。当前处于 **P1：Gitmoji 本地搜索与复制**（P0 壳层保留）。
+面向 macOS 的菜单栏 Gitmoji 助手（Menu Bar Agent）。当前处于 **P2：Spotlight 风格浮动面板 + 纯键盘闭环**。
 
 ## 产品定位
 
 - **形态**：`LSUIElement` 菜单栏应用，无 Dock 图标
-- **当前能力**：内置 Gitmoji 列表、本地关键词过滤、复制 emoji / `:code:`、最近使用（UserDefaults）
+- **当前能力**：内置 Gitmoji 搜索复制 + 居中浮动面板 + ↑↓/⏎/Esc 键盘操作
 - **平台**：macOS 26（Tahoe），Swift 6 + SwiftUI，面向 Liquid Glass
-- **状态管理**：Observation（`@Observable`），不引入 TCA / Combine 全家桶
+- **状态管理**：Observation（`@Observable`）
 - **依赖**：零第三方 SPM
 
 ## 架构与目录
@@ -15,77 +15,74 @@
 ```
 GitPalette/
 ├── App/
-│   └── GitPaletteApp.swift          # MenuBarExtra + Window(启动器) + Settings
+│   └── GitPaletteApp.swift
 ├── Core/
-│   ├── Config/                      # AppConfig、CopyFormat
-│   └── DesignSystem/                # Liquid Glass 壳层占位
+│   ├── Config/
+│   └── DesignSystem/            # GlassStyle、LauncherGlassShell
 ├── Features/
-│   ├── Launcher/                    # 菜单栏菜单（打开启动器）
+│   ├── Launcher/                # 浮动面板 AppKit 桥接（集中）
+│   │   ├── LauncherController.swift   # present / dismiss / toggle
+│   │   ├── LauncherPanelFactory.swift # NSPanel 创建与多屏居中
+│   │   ├── LauncherPanelContentView.swift
+│   │   └── LauncherMenuView.swift
 │   ├── Gitmoji/
-│   │   ├── Domain/                  # Gitmoji 模型、中文别名
-│   │   ├── Data/                    # Repository、Bundle 加载、最近使用
-│   │   └── Presentation/            # ListView + ViewModel + Row
-│   ├── Settings/                    # 复制格式设置
-│   └── AI/                          # 空占位（未实现）
+│   │   ├── Domain/
+│   │   ├── Data/
+│   │   └── Presentation/        # ListView + ViewModel + Row
+│   ├── Settings/
+│   └── AI/                      # 空占位
 ├── Resources/
-│   └── gitmojis.json                # 官方 API 固化数据（离线）
+│   └── gitmojis.json
 └── Assets.xcassets/
 ```
 
 ```text
-┌──────────────────────────────────────────────┐
-│                 App（Scene 壳）                 │
-│  MenuBarExtra · Window(启动器) · Settings     │
-└──────────────────────┬───────────────────────┘
-                       │
-         ┌─────────────┴─────────────┐
-         ▼                           ▼
-   Features/Gitmoji               Core/*
-   Domain → Data → Presentation   Config / DesignSystem
+MenuBarExtra 「打开启动器」
+        │
+        ▼
+LauncherController.present()
+        │
+        ▼
+   NSPanel（borderless / floating）
+        │
+        ▼
+ NSHostingView → LauncherPanelContentView
+        │
+        ▼
+   glass 外壳 + GitmojiListView
 ```
 
-### P1 已实现
+### 面板与键盘
 
-| 模块 | 说明 |
+| 操作 | 行为 |
 |------|------|
-| `Gitmoji` / `GitmojiCollection` | 对齐官方 JSON 字段解码 |
-| `BundleGitmojiRepository` | Bundle 加载；`all` / `search(query:)` |
-| `GitmojiListViewModel` | `query`、`filtered`、`selectedIndex`、`copySelected()` |
-| `GitmojiListView` | TextField + List；复制反馈「已复制」 |
-| `RecentGitmojiStore` | 最近 8 条，UserDefaults 持久化 |
-| `AppConfig.copyFormat` | emoji / `:code:`，设置与启动器内可切换并持久化 |
+| ↑ / ↓ | 移动选中（不会越界） |
+| ⏎ | 按当前格式复制并关闭 |
+| Esc | 关闭面板 |
+| 输入 | 本地过滤，选中重置为 0 |
+| 失焦 / 点外部 | 关闭面板（推荐行为） |
+
+Liquid Glass：仅浮层外壳使用 `.glassEffect` + `ultraThinMaterial` 衬底；列表内容保持清晰可读。
 
 ### 明确不做（本阶段）
 
-全局热键 ⌘⇧G、NSPanel Spotlight 面板、AI、网络强制拉取、自动 commit、失焦关闭浮动窗。
+全局热键 ⌘⇧G、AI、网络强制拉取 Gitmoji、自动 commit。
 
 ## 阶段路线
 
-1. **P0 Shell**：Menu Bar Agent 壳、目录分层、AppConfig ✅
-2. **P1 Gitmoji 核心（当前）**：Bundle 数据、本地搜索、复制、最近使用 ✅
-3. **P2 热键与面板**：全局热键 ⌘⇧G、NSPanel / 启动器体验
-4. **P3 设置完善**：启动项等更多偏好
-5. **P4 AI（可选）**：提交信息建议等
-6. **P5 分发**：签名、公证、Sparkle（如需要）
+1. **P0 Shell** ✅
+2. **P1 Gitmoji 搜索复制** ✅
+3. **P2 浮动面板 + 键盘（当前）** ✅
+4. **P3 全局热键 ⌘⇧G**
+5. **P4 AI（可选）**
+6. **P5 分发**
 
 ## 如何运行
 
-### 环境要求
-
-- macOS 26（Tahoe）或更高
-- Xcode 26+（Swift 6）
-
-### 步骤
-
-1. 打开 `GitPalette.xcodeproj`
-2. 选择 scheme **GitPalette**，目标为本机 Mac
-3. 按 `⌘R` 运行
-4. 菜单栏点击调色板图标 → **打开启动器**
-5. 无需网络即可浏览完整列表；试搜 `bug` / `sparkles` / `性能`
-6. 回车或点「复制」；在文本编辑器粘贴验证
-7. 切换复制格式（emoji / `:code:`）；关闭再开确认最近使用仍在
-
-### 命令行编译
+1. 打开 `GitPalette.xcodeproj` → `⌘R`
+2. 菜单栏调色板 → **打开启动器**
+3. 不依赖鼠标：输入 → ↑↓ → ⏎ 复制并关闭；Esc 关闭
+4. 试搜 `bug` / `sparkles` / `性能`；切换 emoji / `:code:`
 
 ```bash
 xcodebuild -scheme GitPalette -configuration Debug build
@@ -93,8 +90,7 @@ xcodebuild -scheme GitPalette -configuration Debug build
 
 ### 验收要点
 
-- [x] 离线可见完整 Gitmoji 列表（Bundle JSON）
-- [x] 关键词过滤（含中文别名如「性能」→ performance）
-- [x] 复制 emoji / `:code:` 行为正确
-- [x] 最近使用跨启动保留（UserDefaults）
-- [x] 菜单栏壳无回归（LSUIElement + MenuBarExtra）
+- [x] 纯键盘：打开 → 输入 → 选中 → 复制 → 面板关闭
+- [x] Esc / 无结果 / 选中不越界
+- [x] 玻璃圆角阴影浮层；亮暗色可读
+- [x] P1 搜索/复制/最近使用无回归

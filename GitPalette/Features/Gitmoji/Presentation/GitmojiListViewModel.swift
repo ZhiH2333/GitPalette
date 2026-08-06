@@ -11,10 +11,14 @@ import Observation
 
 /// Gitmoji 可搜索列表 ViewModel。
 @Observable
+@MainActor
 final class GitmojiListViewModel {
     /// 搜索关键词
     var query: String = "" {
-        didSet { executeClampSelectedIndex() }
+        didSet {
+            selectedIndex = 0
+            executeClampSelectedIndex()
+        }
     }
     /// 当前选中行（相对 filtered）
     var selectedIndex: Int = 0
@@ -32,6 +36,11 @@ final class GitmojiListViewModel {
         repository.search(query: query)
     }
 
+    /// 是否无任何内置数据。
+    var isDataEmpty: Bool {
+        repository.all.isEmpty
+    }
+
     init(
         repository: GitmojiRepository,
         recentStore: RecentGitmojiStore = RecentGitmojiStore(),
@@ -43,13 +52,23 @@ final class GitmojiListViewModel {
         executeReloadRecentItems()
     }
 
-    /// 复制当前选中项。
-    func copySelected() {
+    /// 打开面板前重置搜索与选中。
+    func executeResetForPresentation() {
+        query = ""
+        selectedIndex = 0
+        copyFeedbackText = nil
+        executeReloadRecentItems()
+    }
+
+    /// 复制当前选中项；成功返回 true。
+    @discardableResult
+    func copySelected() -> Bool {
         let items: [Gitmoji] = filtered
         guard items.indices.contains(selectedIndex) else {
-            return
+            return false
         }
         executeCopy(items[selectedIndex])
+        return true
     }
 
     /// 复制指定条目并记入最近使用。
@@ -138,6 +157,9 @@ final class GitmojiListViewModel {
         }
         if selectedIndex >= count {
             selectedIndex = count - 1
+        }
+        if selectedIndex < 0 {
+            selectedIndex = 0
         }
     }
 }

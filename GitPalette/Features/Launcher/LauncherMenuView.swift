@@ -10,7 +10,7 @@ import SwiftUI
 
 /// 菜单栏 Extra 菜单视图。
 struct LauncherMenuView: View {
-    @Environment(\.openWindow) private var openWindow
+    var launcherController: LauncherController
 
     var body: some View {
         Button("打开启动器") {
@@ -25,10 +25,12 @@ struct LauncherMenuView: View {
         }
     }
 
-    /// 打开 Gitmoji 启动器窗口。
+    /// 调用 LauncherController 打开浮动面板。
     private func executeOpenLauncher() {
-        openWindow(id: "launcher")
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        // 等菜单栏菜单收起后再 present，避免抢焦点失败。
+        DispatchQueue.main.async {
+            launcherController.present()
+        }
     }
 
     /// 退出应用。

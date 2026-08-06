@@ -2,25 +2,28 @@
 //  GitPaletteApp.swift
 //  GitPalette
 //
-//  应用入口：菜单栏 Agent 壳层 + 临时启动器窗口。
+//  应用入口：菜单栏 Agent 壳层 + 启动器浮动面板控制器。
 //
 
 import SwiftUI
 
 @main
 struct GitPaletteApp: App {
-    @State private var appConfig: AppConfig = AppConfig()
+    @State private var appConfig: AppConfig
+    @State private var launcherController: LauncherController
+
+    init() {
+        let config: AppConfig = AppConfig()
+        _appConfig = State(initialValue: config)
+        _launcherController = State(initialValue: LauncherController(appConfig: config))
+    }
 
     var body: some Scene {
         MenuBarExtra {
-            LauncherMenuView()
+            LauncherMenuView(launcherController: launcherController)
         } label: {
             Label(appConfig.appName, systemImage: "paintpalette.fill")
         }
-        Window("启动器", id: "launcher") {
-            GitmojiListView(appConfig: appConfig)
-        }
-        .defaultSize(width: 480, height: 560)
         Settings {
             SettingsView(appConfig: appConfig)
                 .applyGlassStylePlaceholder()
