@@ -15,7 +15,7 @@ final class LauncherController {
     private let recentStore: RecentGitmojiStore
     private let viewModel: GitmojiListViewModel
     private var panel: NSPanel?
-    private var hostingView: TransparentHostingView<LauncherPanelContentView>?
+    private var hostingView: TransparentHostingView?
     private var resignObserver: NSObjectProtocol?
     private var keyMonitor: Any?
     private var activationObserver: NSObjectProtocol?
@@ -172,7 +172,7 @@ final class LauncherController {
             return panel
         }
         let created: LauncherPanel = LauncherPanelFactory.makePanel()
-        let hosting: TransparentHostingView<LauncherPanelContentView> = TransparentHostingView(
+        let hosting: TransparentHostingView = TransparentHostingView(
             rootView: buildContentView()
         )
         hosting.frame = NSRect(origin: .zero, size: LauncherPanelFactory.panelSize)
@@ -188,7 +188,7 @@ final class LauncherController {
 
     /// 刷新 Hosting 根视图（焦点令牌 / 回调）。
     private func executeRefreshHostingContent() {
-        hostingView?.rootView = buildContentView()
+        hostingView?.executeSetRootView(buildContentView())
     }
 
     /// 构建面板 SwiftUI 内容。
