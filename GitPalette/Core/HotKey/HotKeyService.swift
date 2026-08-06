@@ -10,6 +10,12 @@ import Combine
 import Foundation
 import KeyboardShortcuts
 
+/// 撤销辅助功能后的 UI 反馈。
+enum AccessibilityRevokeFeedback: Equatable, Sendable {
+    case succeeded
+    case failed
+}
+
 /// 全局热键服务。
 @MainActor
 final class HotKeyService: ObservableObject {
@@ -23,9 +29,16 @@ final class HotKeyService: ObservableObject {
     @Published private(set) var hotkeyDisplayText: String = HotKeyDefaults.displayText
     /// 变化时 UI 应打开权限引导窗
     @Published private(set) var permissionGuideToken: UUID?
+    /// 最近一次撤销操作反馈
+    @Published private(set) var accessibilityRevokeFeedback: AccessibilityRevokeFeedback?
     private let accessibilityService: AccessibilityPermissionService
     private var onToggle: (() -> Void)?
     private var didRegisterHandler: Bool = false
+
+    /// 当前 Bundle ID（Debug / Release 不同）。
+    var accessibilityBundleID: String {
+        accessibilityService.currentBundleID
+    }
 
     init(accessibilityService: AccessibilityPermissionService = AccessibilityPermissionService()) {
         self.accessibilityService = accessibilityService
@@ -64,6 +77,19 @@ final class HotKeyService: ObservableObject {
     func executeOpenAccessibilitySettings() {
         accessibilityService.executeRequestAccessAndOpenSettings()
         executeRefreshStatus()
+    }
+
+    /// 撤销辅助功能授权（清 Debug + Release TCC），并提示重启后重新授权。
+    func executeRevokeAccessibilityAccess() {
+        let result: AccessibilityRevokeResult = accessibilityService.executeRevokeAccessibilityAccess()
+        UserDefaults.standard.set(false, forKey: Self.didShowGuideKey)
+        executeRefreshStatus()
+        accessibilityRevokeFeedback = result.didSucceed ? .succeeded : .failed
+    }
+
+    /// 清除撤销结果提示。
+    func executeClearAccessibilityRevokeFeedback() {
+        accessibilityRevokeFeedback = nil
     }
 
     /// 重置为默认热键 ⌘⇧G。

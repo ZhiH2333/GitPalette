@@ -51,14 +51,23 @@ struct LauncherMenuView: View {
             guard token != nil else {
                 return
             }
+            guard !hotKeyService.isAccessibilityGranted else {
+                return
+            }
             executeOpenAccessibilityWindow()
         }
     }
 
-    /// 启动热键服务（幂等）。
+    /// 启动热键服务；已授权则打开启动器，未授权且需引导时才弹权限窗。
     private func executeBootstrapHotKey() {
         hotKeyService.executeStart {
             launcherController.toggle()
+        }
+        hotKeyService.executeRefreshStatus()
+        executeCloseAccessibilityWindows()
+        if hotKeyService.isAccessibilityGranted {
+            executeOpenLauncher()
+            return
         }
         if hotKeyService.permissionGuideToken != nil {
             executeOpenAccessibilityWindow()
@@ -85,12 +94,28 @@ struct LauncherMenuView: View {
 
     /// 打开辅助功能引导窗并置前。
     private func executeOpenAccessibilityWindow() {
+        guard !hotKeyService.isAccessibilityGranted else {
+            return
+        }
         DispatchQueue.main.async {
             AppWindowFocus.executePrepareForWindowPresentation()
             openWindow(id: AppWindowID.accessibilityPermission)
             AppWindowFocus.executeBringToFront(
                 titleContaining: ["辅助功能", "Accessibility", "权限"]
             )
+        }
+    }
+
+    /// 关闭可能被系统恢复的辅助功能引导窗。
+    private func executeCloseAccessibilityWindows() {
+        for window in NSApp.windows {
+            let title: String = window.title
+            let isAccessibilityWindow: Bool =
+                title.contains("辅助功能")
+                || title.localizedCaseInsensitiveContains("Accessibility")
+            if isAccessibilityWindow {
+                window.close()
+            }
         }
     }
 

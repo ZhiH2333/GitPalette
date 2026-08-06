@@ -38,6 +38,9 @@ enum L10nKey: String, Sendable {
     case sectionAccessibility
     case accessibilityGranted
     case accessibilityDenied
+    case revokeAccessibility
+    case accessibilityRevokeSucceeded
+    case accessibilityRevokeFailed
     case openSystemSettings
     case recheck
     case menuBarAssistant
@@ -116,6 +119,9 @@ enum L10n {
         .sectionAccessibility: "Accessibility",
         .accessibilityGranted: "Granted",
         .accessibilityDenied: "Not granted: the global hotkey may not work when another app is frontmost",
+        .revokeAccessibility: "Revoke Accessibility…",
+        .accessibilityRevokeSucceeded: "Accessibility permission cleared. Quit and reopen the app, then grant Accessibility again.",
+        .accessibilityRevokeFailed: "Could not clear automatically. Terminal commands were copied — paste them in Terminal, then quit and reopen the app to grant Accessibility again.",
         .openSystemSettings: "Open System Settings…",
         .recheck: "Recheck",
         .menuBarAssistant: "Menu bar Gitmoji assistant",
@@ -182,6 +188,9 @@ enum L10n {
         .sectionAccessibility: "辅助功能权限",
         .accessibilityGranted: "已授予",
         .accessibilityDenied: "未授予：其他 App 前台时全局热键可能无法使用",
+        .revokeAccessibility: "撤销辅助功能权限…",
+        .accessibilityRevokeSucceeded: "已清除辅助功能授权。请退出并重新打开应用，再重新授予辅助功能权限。",
+        .accessibilityRevokeFailed: "无法自动清除。已复制终端命令到剪贴板，请先在「终端」执行，然后退出并重新打开应用，再重新授权。",
         .openSystemSettings: "打开系统设置…",
         .recheck: "重新检测",
         .menuBarAssistant: "菜单栏 Gitmoji 助手",
