@@ -197,7 +197,7 @@ enum CommandSuggestionEngine {
         }
     }
 
-    /// /recent 参数建议。
+    /// /recent 参数建议（Spotlight 风格：始终展示全部子命令，仅排序不隐藏）。
     private static func executeBuildRecentSuggestions(
         query: String,
         argument: String,
@@ -217,31 +217,36 @@ enum CommandSuggestionEngine {
             summary: L10n.text(.cmdArgRecentCount, language: language),
             completionText: "/recent count"
         )
+        let all: [CommandSuggestion] = [clearSuggestion, countSuggestion]
         let parts: [String] = argument.split(whereSeparator: { $0.isWhitespace }).map(String.init)
         if parts.isEmpty {
-            return [clearSuggestion, countSuggestion]
+            return all
         }
         let head: String = parts[0].lowercased()
-        // 已完整选中 clear/count：仍展示两者，便于 ↑↓ 切换。
-        if parts.count == 1, head == "clear" || head == "count" {
-            return [clearSuggestion, countSuggestion]
+        guard parts.count == 1 else {
+            // 已输入 count + 数字 → 仍展示两者以便切回
+            if head == "count" { return all }
+            return all
         }
-        if parts.count == 1, "clear".hasPrefix(head), "count".hasPrefix(head) {
-            return [clearSuggestion, countSuggestion]
+        // 按匹配度排序：精确 → 前缀 → 包含 → 其余
+        return all.sorted { a, b in
+            let aVal: String = a.primaryText.lowercased()
+            let bVal: String = b.primaryText.lowercased()
+            let aExact: Bool = aVal == head
+            let bExact: Bool = bVal == head
+            if aExact != bExact { return aExact }
+            let aPrefix: Bool = aVal.hasPrefix(head)
+            let bPrefix: Bool = bVal.hasPrefix(head)
+            if aPrefix != bPrefix { return aPrefix }
+            let aContains: Bool = aVal.contains(head)
+            let bContains: Bool = bVal.contains(head)
+            if aContains != bContains { return aContains }
+            return aVal < bVal
         }
-        if parts.count == 1, "clear".hasPrefix(head) {
-            return [clearSuggestion]
-        }
-        if "count".hasPrefix(head) {
-            if parts.count == 1 {
-                return [countSuggestion]
-            }
-            return []
-        }
-        return []
     }
 
-    /// 按参数前缀过滤候选并生成补全。
+    /// Spotlight 风格：始终展示全部候选，仅按前缀匹配重排序（不过滤）。
+    /// 高亮由 executePreferSelectionMatchingQuery 负责。
     private static func executeFilterArgumentCandidates(
         command: LauncherCommand,
         query: String,
@@ -249,21 +254,25 @@ enum CommandSuggestionEngine {
         candidates: [(value: String, summary: String)]
     ) -> [CommandSuggestion] {
         let prefixLower: String = argumentPrefix.lowercased()
-        let filtered: [(String, String)]
+        let sorted: [(String, String)]
         if prefixLower.isEmpty {
-            filtered = candidates
-        } else if candidates.contains(where: { $0.value == prefixLower }) {
-            // 已完整选中某一参数：仍展示全部候选，便于 ↑↓ 切回其他项。
-            filtered = candidates
+            sorted = candidates
         } else {
-            filtered = candidates.filter { candidate in
-                candidate.value.hasPrefix(prefixLower)
+            // 精确匹配 → 前缀匹配 → 包含匹配 → 其余
+            sorted = candidates.sorted { a, b in
+                let aExact: Bool = a.value == prefixLower
+                let bExact: Bool = b.value == prefixLower
+                if aExact != bExact { return aExact }
+                let aPrefix: Bool = a.value.hasPrefix(prefixLower)
+                let bPrefix: Bool = b.value.hasPrefix(prefixLower)
+                if aPrefix != bPrefix { return aPrefix }
+                let aContains: Bool = a.value.contains(prefixLower)
+                let bContains: Bool = b.value.contains(prefixLower)
+                if aContains != bContains { return aContains }
+                return a.value < b.value
             }
         }
-        if filtered.isEmpty {
-            return []
-        }
-        return filtered.map { value, summary in
+        return sorted.map { value, summary in
             CommandSuggestion(
                 id: "arg-\(command.name)-\(value)",
                 primaryText: value,
