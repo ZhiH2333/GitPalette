@@ -47,7 +47,7 @@ enum CommandSuggestionEngine {
         return suggestions[index].completionText
     }
 
-    /// 未选定命令时：按前缀匹配命令名。
+    /// 未选定命令时：按前缀 / 包含匹配命令名。
     private static func executeBuildCommandNameSuggestions(query: String) -> [CommandSuggestion] {
         let body: String = String(query.dropFirst())
         let token: String = body.split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? body

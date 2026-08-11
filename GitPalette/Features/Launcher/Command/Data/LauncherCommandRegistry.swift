@@ -29,7 +29,8 @@ enum LauncherCommandRegistry {
         return nil
     }
 
-    /// 按前缀匹配命令（用于建议列表）；返回 (命令, 是否命中别名)。
+    /// 按前缀 / 包含匹配命令（用于建议列表）；返回 (命令, 是否命中别名)。
+    /// 排序：精确名 → 前缀名 → 别名前缀 → 名称包含 → 别名包含。
     static func resolvePrefixMatches(prefix: String) -> [(command: LauncherCommand, matchedViaAlias: Bool)] {
         let normalized: String = executeNormalizeToken(prefix)
         if normalized.isEmpty {
@@ -38,6 +39,8 @@ enum LauncherCommandRegistry {
         var exactName: [(LauncherCommand, Bool)] = []
         var prefixName: [(LauncherCommand, Bool)] = []
         var aliasHits: [(LauncherCommand, Bool)] = []
+        var containsName: [(LauncherCommand, Bool)] = []
+        var containsAlias: [(LauncherCommand, Bool)] = []
         var seen: Set<LauncherCommand> = []
         for command in allCommands {
             if command.name == normalized {
@@ -55,9 +58,21 @@ enum LauncherCommandRegistry {
                     aliasHits.append((command, true))
                     seen.insert(command)
                 }
+                continue
+            }
+            if command.name.contains(normalized) {
+                containsName.append((command, false))
+                seen.insert(command)
+                continue
+            }
+            if command.aliases.contains(where: { $0.contains(normalized) }) {
+                if !seen.contains(command) {
+                    containsAlias.append((command, true))
+                    seen.insert(command)
+                }
             }
         }
-        return exactName + prefixName + aliasHits
+        return exactName + prefixName + aliasHits + containsName + containsAlias
     }
 
     /// 规范化 token：去前导 /、小写、去空白。

@@ -44,6 +44,14 @@ struct GitPaletteApp: App {
             )
         } label: {
             Label(preferences.appName, systemImage: "paintpalette.fill")
+                .background {
+                    MenuBarRuntimeBootstrap(
+                        preferences: preferences,
+                        launcherController: launcherController,
+                        hotKeyService: hotKeyService,
+                        windowPresenter: windowPresenter
+                    )
+                }
         }
         Window(preferences.t(.needAccessibilityTitle), id: AppWindowID.accessibilityPermission) {
             AccessibilityPermissionView(

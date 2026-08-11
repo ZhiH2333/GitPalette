@@ -30,6 +30,36 @@ final class LauncherCommandViewModel: ObservableObject {
         parseResult.isCommandMode
     }
 
+    /// Spotlight 半透明补全后缀（相对当前 query）；无候选时为空。
+    /// 前缀命中：续写剩余字符；包含命中：以「 — /command」提示完整命令。
+    func resolveGhostSuffix(for query: String) -> String {
+        guard isCommandMode else {
+            return ""
+        }
+        guard suggestions.indices.contains(selectedIndex) else {
+            return ""
+        }
+        let completion: String = suggestions[selectedIndex].completionText
+            .trimmingCharacters(in: .whitespaces)
+        guard !completion.isEmpty else {
+            return ""
+        }
+        let queryLower: String = query.lowercased()
+        let completionLower: String = completion.lowercased()
+        if completionLower.hasPrefix(queryLower), completion.count >= query.count {
+            let suffix: String = String(completion.dropFirst(query.count))
+            if suffix.trimmingCharacters(in: .whitespaces).isEmpty {
+                return ""
+            }
+            return suffix
+        }
+        // 包含匹配等非整词续写：半透明提示完整命令。
+        if query.hasPrefix("/"), query.count > 1 {
+            return " — " + completion
+        }
+        return ""
+    }
+
     /// 面板展示前重置。
     func executeReset() {
         suggestions = []

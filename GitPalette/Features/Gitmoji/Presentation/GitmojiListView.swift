@@ -49,14 +49,15 @@ struct GitmojiListView: View {
             GitmojiSearchField(
                 text: $viewModel.query,
                 placeholder: commandViewModel.isCommandMode
-                    ? "输入命令，Tab 补全…"
+                    ? "输入命令，Tab / → 补全…"
                     : appConfig.t(.searchPlaceholder),
+                ghostSuffix: commandViewModel.resolveGhostSuffix(for: viewModel.query),
                 focusToken: focusToken,
                 onSubmit: onConfirmCopy,
                 onCancel: onDismiss,
                 onRequestComplete: onRequestComplete
             )
-            .frame(maxWidth: .infinity, minHeight: 28)
+            .frame(maxWidth: .infinity, minHeight: 28, maxHeight: 28)
             if !viewModel.query.isEmpty {
                 Button {
                     viewModel.query = ""
@@ -291,7 +292,7 @@ struct GitmojiListView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
-                Text("Tab 补全 · ↑↓ 选择 · Return 执行")
+                Text("Tab / → 补全 · ↑↓ 选择 · Return 执行")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             } else {
