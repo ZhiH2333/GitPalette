@@ -75,6 +75,53 @@ enum L10nKey: String, Sendable {
     case formatEmoji
     case formatCode
     case formatCustomTemplate
+    // 「/」命令提示（跟随 descriptionLanguage）
+    case cmdSummarySettings
+    case cmdSummaryGeneral
+    case cmdSummaryHotkey
+    case cmdSummaryAbout
+    case cmdSummaryPermissions
+    case cmdSummaryLanguage
+    case cmdSummaryCodelang
+    case cmdSummaryDesclang
+    case cmdSummaryStyle
+    case cmdSummaryFormat
+    case cmdSummaryTemplate
+    case cmdSummaryRecent
+    case cmdSummaryQuit
+    case cmdSummaryHide
+    case cmdSummaryHelp
+    case cmdArgSettingsGeneral
+    case cmdArgSettingsLanguage
+    case cmdArgSettingsHotkey
+    case cmdArgLangEnglish
+    case cmdArgLangChinese
+    case cmdArgStyleAuto
+    case cmdArgStyleLiquid
+    case cmdArgStyleMaterial
+    case cmdArgFormatEmoji
+    case cmdArgFormatCode
+    case cmdArgFormatTemplate
+    case cmdArgTemplateHint
+    case cmdArgRecentClear
+    case cmdArgRecentCount
+    case cmdNoMatch
+    case cmdRejectsArguments
+    case cmdUnsupportedSettingsTab
+    case cmdNeedLanguage
+    case cmdUnsupportedLanguage
+    case cmdNeedStyle
+    case cmdUnsupportedStyle
+    case cmdNeedFormat
+    case cmdUnsupportedFormat
+    case cmdNeedTemplate
+    case cmdNeedRecentSubcommand
+    case cmdClearNoExtraArgs
+    case cmdNeedCountValue
+    case cmdCountMustBeInteger
+    case cmdUnsupportedSubcommand
+    case cmdUnknownCommand
+    case cmdIncompleteArguments
 }
 
 /// 界面文案表。
@@ -111,7 +158,7 @@ enum L10n {
         .descriptionLanguage: "Description",
         .languageHintUI: "Controls menus, settings, and launcher chrome text.",
         .languageHintCode: "Controls code text in the list and when copying.",
-        .languageHintDescription: "Controls the description text under each code.",
+        .languageHintDescription: "Controls the description text under each code, and slash-command hint text.",
         .sectionLauncherHotKey: "Launcher hotkey",
         .toggleLauncher: "Show / hide launcher",
         .currentHotKey: "Current: ",
@@ -155,7 +202,53 @@ enum L10n {
         .styleMaterial: "Frosted glass",
         .formatEmoji: "emoji",
         .formatCode: ":code:",
-        .formatCustomTemplate: "Custom template"
+        .formatCustomTemplate: "Custom template",
+        .cmdSummarySettings: "Open Settings (optional: general / language / hotkey)",
+        .cmdSummaryGeneral: "Open Settings · General",
+        .cmdSummaryHotkey: "Open Settings · Hotkey",
+        .cmdSummaryAbout: "Open About window",
+        .cmdSummaryPermissions: "Open Accessibility permission guide",
+        .cmdSummaryLanguage: "Set interface language (english / chinese)",
+        .cmdSummaryCodelang: "Set Code translation language (english / chinese)",
+        .cmdSummaryDesclang: "Set description language (english / chinese)",
+        .cmdSummaryStyle: "Set appearance (auto / liquid / material)",
+        .cmdSummaryFormat: "Set copy format (emoji / code / template)",
+        .cmdSummaryTemplate: "Set custom copy template",
+        .cmdSummaryRecent: "Recent: clear or count <5…20>",
+        .cmdSummaryQuit: "Quit the app",
+        .cmdSummaryHide: "Close the launcher",
+        .cmdSummaryHelp: "List all commands",
+        .cmdArgSettingsGeneral: "General settings",
+        .cmdArgSettingsLanguage: "Language settings",
+        .cmdArgSettingsHotkey: "Hotkey settings",
+        .cmdArgLangEnglish: "English",
+        .cmdArgLangChinese: "Simplified Chinese (zh)",
+        .cmdArgStyleAuto: "Automatic",
+        .cmdArgStyleLiquid: "Liquid Glass (glass)",
+        .cmdArgStyleMaterial: "Frosted glass",
+        .cmdArgFormatEmoji: "Emoji only",
+        .cmdArgFormatCode: "Shortcode only",
+        .cmdArgFormatTemplate: "Custom template",
+        .cmdArgTemplateHint: "Example template (editable)",
+        .cmdArgRecentClear: "Clear recent items",
+        .cmdArgRecentCount: "Set keep count (5…20)",
+        .cmdNoMatch: "No matching command",
+        .cmdRejectsArguments: "This command does not accept arguments",
+        .cmdUnsupportedSettingsTab: "Unsupported settings tab",
+        .cmdNeedLanguage: "Please specify a language",
+        .cmdUnsupportedLanguage: "Unsupported language",
+        .cmdNeedStyle: "Please specify an appearance style",
+        .cmdUnsupportedStyle: "Unsupported appearance style",
+        .cmdNeedFormat: "Please specify a copy format",
+        .cmdUnsupportedFormat: "Unsupported copy format",
+        .cmdNeedTemplate: "Please enter template content",
+        .cmdNeedRecentSubcommand: "Specify subcommand clear or count",
+        .cmdClearNoExtraArgs: "clear does not take extra arguments",
+        .cmdNeedCountValue: "Specify a count, e.g. count 8",
+        .cmdCountMustBeInteger: "Count must be an integer",
+        .cmdUnsupportedSubcommand: "Unsupported subcommand",
+        .cmdUnknownCommand: "No matching command found",
+        .cmdIncompleteArguments: "Command arguments are incomplete"
     ]
 
     private static let simplifiedChinese: [L10nKey: String] = [
@@ -180,7 +273,7 @@ enum L10n {
         .descriptionLanguage: "描述",
         .languageHintUI: "控制菜单、设置与启动器界面文案。",
         .languageHintCode: "控制列表与复制时的 code 文案。",
-        .languageHintDescription: "控制每条 code 下方的描述文案。",
+        .languageHintDescription: "控制每条 code 下方的描述文案，以及「/」命令的提示文案。",
         .sectionLauncherHotKey: "启动器热键",
         .toggleLauncher: "唤起 / 关闭启动器",
         .currentHotKey: "当前：",
@@ -224,7 +317,53 @@ enum L10n {
         .styleMaterial: "毛玻璃",
         .formatEmoji: "emoji",
         .formatCode: ":code:",
-        .formatCustomTemplate: "自定义模板"
+        .formatCustomTemplate: "自定义模板",
+        .cmdSummarySettings: "打开设置（可选 general / language / hotkey）",
+        .cmdSummaryGeneral: "打开设置 · 通用",
+        .cmdSummaryHotkey: "打开设置 · 快捷键",
+        .cmdSummaryAbout: "打开关于窗口",
+        .cmdSummaryPermissions: "打开辅助功能权限引导",
+        .cmdSummaryLanguage: "设置界面语言（english / chinese）",
+        .cmdSummaryCodelang: "设置 Code 翻译语言（english / chinese）",
+        .cmdSummaryDesclang: "设置描述语言（english / chinese）",
+        .cmdSummaryStyle: "设置外观（auto / liquid / material）",
+        .cmdSummaryFormat: "设置复制格式（emoji / code / template）",
+        .cmdSummaryTemplate: "设置自定义复制模板内容",
+        .cmdSummaryRecent: "最近使用：clear 或 count <5…20>",
+        .cmdSummaryQuit: "退出应用",
+        .cmdSummaryHide: "关闭启动器面板",
+        .cmdSummaryHelp: "列出全部命令",
+        .cmdArgSettingsGeneral: "通用设置",
+        .cmdArgSettingsLanguage: "语言设置",
+        .cmdArgSettingsHotkey: "快捷键设置",
+        .cmdArgLangEnglish: "English",
+        .cmdArgLangChinese: "简体中文（zh）",
+        .cmdArgStyleAuto: "自动",
+        .cmdArgStyleLiquid: "液态玻璃（glass）",
+        .cmdArgStyleMaterial: "毛玻璃",
+        .cmdArgFormatEmoji: "仅表情",
+        .cmdArgFormatCode: "仅 shortcode",
+        .cmdArgFormatTemplate: "自定义模板",
+        .cmdArgTemplateHint: "示例模板（可自由编辑）",
+        .cmdArgRecentClear: "清空最近使用",
+        .cmdArgRecentCount: "设置保留数量（5…20）",
+        .cmdNoMatch: "没有匹配的命令",
+        .cmdRejectsArguments: "该命令不接受参数",
+        .cmdUnsupportedSettingsTab: "不支持的设置页参数",
+        .cmdNeedLanguage: "请指定语言参数",
+        .cmdUnsupportedLanguage: "不支持的语言参数",
+        .cmdNeedStyle: "请指定外观参数",
+        .cmdUnsupportedStyle: "不支持的外观参数",
+        .cmdNeedFormat: "请指定格式参数",
+        .cmdUnsupportedFormat: "不支持的格式参数",
+        .cmdNeedTemplate: "请输入模板内容",
+        .cmdNeedRecentSubcommand: "请指定子命令 clear 或 count",
+        .cmdClearNoExtraArgs: "clear 不需要额外参数",
+        .cmdNeedCountValue: "请指定数量，例如 count 8",
+        .cmdCountMustBeInteger: "数量必须是整数",
+        .cmdUnsupportedSubcommand: "不支持的子命令",
+        .cmdUnknownCommand: "未找到匹配的命令",
+        .cmdIncompleteArguments: "命令参数不完整"
     ]
 }
 

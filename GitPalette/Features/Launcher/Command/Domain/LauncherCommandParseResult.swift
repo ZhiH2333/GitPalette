@@ -17,7 +17,7 @@ struct LauncherCommandParseResult: Equatable, Sendable {
     let rawArgumentText: String
     /// 当前输入是否可合法执行
     let isExecutable: Bool
-    /// 若不可执行时的中文原因（可选）
+    /// 若不可执行时的本地化原因（跟随 descriptionLanguage）
     let validationMessage: String?
 
     /// 非命令模式占位。
@@ -33,7 +33,10 @@ struct LauncherCommandParseResult: Equatable, Sendable {
 /// 将用户输入解析为命令结果。
 enum LauncherCommandParser {
     /// 解析查询字符串。
-    static func executeParse(_ query: String) -> LauncherCommandParseResult {
+    static func executeParse(
+        _ query: String,
+        language: AppLanguage
+    ) -> LauncherCommandParseResult {
         guard query.hasPrefix("/") else {
             return .notCommandMode
         }
@@ -61,7 +64,7 @@ enum LauncherCommandParser {
             )
         }
         let validation: (isExecutable: Bool, message: String?) =
-            executeValidate(command: command, argument: split.argument)
+            executeValidate(command: command, argument: split.argument, language: language)
         return LauncherCommandParseResult(
             isCommandMode: true,
             matchedCommand: command,
@@ -91,35 +94,37 @@ enum LauncherCommandParser {
     /// 校验参数是否合法完整。
     private static func executeValidate(
         command: LauncherCommand,
-        argument: String
+        argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         switch command {
         case .settings:
-            return executeValidateSettings(argument)
+            return executeValidateSettings(argument, language: language)
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
             if argument.isEmpty {
                 return (true, nil)
             }
-            return (false, "该命令不接受参数")
+            return (false, L10n.text(.cmdRejectsArguments, language: language))
         case .language, .codelang, .desclang:
-            return executeValidateLanguage(argument)
+            return executeValidateLanguage(argument, language: language)
         case .style:
-            return executeValidateStyle(argument)
+            return executeValidateStyle(argument, language: language)
         case .format:
-            return executeValidateFormat(argument)
+            return executeValidateFormat(argument, language: language)
         case .template:
             if argument.isEmpty {
-                return (false, "请输入模板内容")
+                return (false, L10n.text(.cmdNeedTemplate, language: language))
             }
             return (true, nil)
         case .recent:
-            return executeValidateRecent(argument)
+            return executeValidateRecent(argument, language: language)
         }
     }
 
     /// 校验 /settings 参数。
     private static func executeValidateSettings(
-        _ argument: String
+        _ argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         if argument.isEmpty {
             return (true, nil)
@@ -128,76 +133,80 @@ enum LauncherCommandParser {
         if lower == "general" || lower == "language" || lower == "hotkey" {
             return (true, nil)
         }
-        return (false, "不支持的设置页参数")
+        return (false, L10n.text(.cmdUnsupportedSettingsTab, language: language))
     }
 
     /// 校验语言类参数。
     private static func executeValidateLanguage(
-        _ argument: String
+        _ argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         if argument.isEmpty {
-            return (false, "请指定语言参数")
+            return (false, L10n.text(.cmdNeedLanguage, language: language))
         }
         if resolveLanguage(argument) != nil {
             return (true, nil)
         }
-        return (false, "不支持的语言参数")
+        return (false, L10n.text(.cmdUnsupportedLanguage, language: language))
     }
 
     /// 校验外观参数。
     private static func executeValidateStyle(
-        _ argument: String
+        _ argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         if argument.isEmpty {
-            return (false, "请指定外观参数")
+            return (false, L10n.text(.cmdNeedStyle, language: language))
         }
         if resolveAppearanceStyle(argument) != nil {
             return (true, nil)
         }
-        return (false, "不支持的外观参数")
+        return (false, L10n.text(.cmdUnsupportedStyle, language: language))
     }
 
     /// 校验复制格式参数。
     private static func executeValidateFormat(
-        _ argument: String
+        _ argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         if argument.isEmpty {
-            return (false, "请指定格式参数")
+            return (false, L10n.text(.cmdNeedFormat, language: language))
         }
         if resolveCopyFormat(argument) != nil {
             return (true, nil)
         }
-        return (false, "不支持的格式参数")
+        return (false, L10n.text(.cmdUnsupportedFormat, language: language))
     }
 
     /// 校验 /recent 子命令。
     private static func executeValidateRecent(
-        _ argument: String
+        _ argument: String,
+        language: AppLanguage
     ) -> (isExecutable: Bool, message: String?) {
         if argument.isEmpty {
-            return (false, "请指定子命令 clear 或 count")
+            return (false, L10n.text(.cmdNeedRecentSubcommand, language: language))
         }
         let parts: [String] = argument.split(whereSeparator: { $0.isWhitespace })
             .map(String.init)
         guard let head: String = parts.first?.lowercased() else {
-            return (false, "请指定子命令 clear 或 count")
+            return (false, L10n.text(.cmdNeedRecentSubcommand, language: language))
         }
         if head == "clear" {
             if parts.count == 1 {
                 return (true, nil)
             }
-            return (false, "clear 不需要额外参数")
+            return (false, L10n.text(.cmdClearNoExtraArgs, language: language))
         }
         if head == "count" {
             guard parts.count >= 2 else {
-                return (false, "请指定数量，例如 count 8")
+                return (false, L10n.text(.cmdNeedCountValue, language: language))
             }
             guard Int(parts[1]) != nil else {
-                return (false, "数量必须是整数")
+                return (false, L10n.text(.cmdCountMustBeInteger, language: language))
             }
             return (true, nil)
         }
-        return (false, "不支持的子命令")
+        return (false, L10n.text(.cmdUnsupportedSubcommand, language: language))
     }
 
     /// 解析语言参数（不区分大小写）。

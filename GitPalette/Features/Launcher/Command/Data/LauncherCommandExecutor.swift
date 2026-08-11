@@ -41,7 +41,12 @@ final class LauncherCommandExecutor {
         self.onReloadRecent = onReloadRecent
     }
 
-    /// 执行已解析且可执行的命令；非法时返回中文提示并保持打开。
+    /// 命令提示语言（跟随 desclang）。
+    private var hintLanguage: AppLanguage {
+        preferences.descriptionLanguage
+    }
+
+    /// 执行已解析且可执行的命令；非法时返回本地化提示并保持打开。
     func execute(
         parseResult: LauncherCommandParseResult
     ) -> LauncherCommandExecutionOutcome {
@@ -49,14 +54,15 @@ final class LauncherCommandExecutor {
             return .keptOpen(message: nil)
         }
         guard let command: LauncherCommand = parseResult.matchedCommand else {
-            return .keptOpen(message: "未找到匹配的命令")
+            return .keptOpen(message: L10n.text(.cmdUnknownCommand, language: hintLanguage))
         }
         if command.isViewOnly {
             return .keptOpen(message: nil)
         }
         guard parseResult.isExecutable else {
             return .keptOpen(
-                message: parseResult.validationMessage ?? "命令参数不完整"
+                message: parseResult.validationMessage
+                    ?? L10n.text(.cmdIncompleteArguments, language: hintLanguage)
             )
         }
         return executeCommand(command, argument: parseResult.rawArgumentText)
@@ -87,19 +93,19 @@ final class LauncherCommandExecutor {
             return .dismissed(shouldRestoreFocus: false)
         case .language:
             guard let language: AppLanguage = LauncherCommandParser.resolveLanguage(argument) else {
-                return .keptOpen(message: "不支持的语言参数")
+                return .keptOpen(message: L10n.text(.cmdUnsupportedLanguage, language: hintLanguage))
             }
             preferences.uiLanguage = language
             return .dismissed(shouldRestoreFocus: true)
         case .codelang:
             guard let language: AppLanguage = LauncherCommandParser.resolveLanguage(argument) else {
-                return .keptOpen(message: "不支持的语言参数")
+                return .keptOpen(message: L10n.text(.cmdUnsupportedLanguage, language: hintLanguage))
             }
             preferences.codeTranslationLanguage = language
             return .dismissed(shouldRestoreFocus: true)
         case .desclang:
             guard let language: AppLanguage = LauncherCommandParser.resolveLanguage(argument) else {
-                return .keptOpen(message: "不支持的语言参数")
+                return .keptOpen(message: L10n.text(.cmdUnsupportedLanguage, language: hintLanguage))
             }
             preferences.descriptionLanguage = language
             return .dismissed(shouldRestoreFocus: true)
@@ -107,13 +113,13 @@ final class LauncherCommandExecutor {
             guard let style: AppearanceStyle =
                 LauncherCommandParser.resolveAppearanceStyle(argument)
             else {
-                return .keptOpen(message: "不支持的外观参数")
+                return .keptOpen(message: L10n.text(.cmdUnsupportedStyle, language: hintLanguage))
             }
             preferences.appearanceStyle = style
             return .dismissed(shouldRestoreFocus: true)
         case .format:
             guard let format: CopyFormat = LauncherCommandParser.resolveCopyFormat(argument) else {
-                return .keptOpen(message: "不支持的格式参数")
+                return .keptOpen(message: L10n.text(.cmdUnsupportedFormat, language: hintLanguage))
             }
             preferences.copyFormat = format
             return .dismissed(shouldRestoreFocus: true)
@@ -139,7 +145,7 @@ final class LauncherCommandExecutor {
         let parts: [String] = argument.split(whereSeparator: { $0.isWhitespace })
             .map(String.init)
         guard let head: String = parts.first?.lowercased() else {
-            return .keptOpen(message: "请指定子命令 clear 或 count")
+            return .keptOpen(message: L10n.text(.cmdNeedRecentSubcommand, language: hintLanguage))
         }
         if head == "clear" {
             onClearRecent()
@@ -147,7 +153,7 @@ final class LauncherCommandExecutor {
         }
         if head == "count" {
             guard parts.count >= 2, let value: Int = Int(parts[1]) else {
-                return .keptOpen(message: "数量必须是整数")
+                return .keptOpen(message: L10n.text(.cmdCountMustBeInteger, language: hintLanguage))
             }
             let lower: Int = PreferencesStore.recentMaxCountRange.lowerBound
             let upper: Int = PreferencesStore.recentMaxCountRange.upperBound
@@ -155,6 +161,6 @@ final class LauncherCommandExecutor {
             onReloadRecent()
             return .dismissed(shouldRestoreFocus: true)
         }
-        return .keptOpen(message: "不支持的子命令")
+        return .keptOpen(message: L10n.text(.cmdUnsupportedSubcommand, language: hintLanguage))
     }
 }

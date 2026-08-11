@@ -163,7 +163,7 @@ struct GitmojiListView: View {
             buildEmptyState(message: message)
         } else if commandViewModel.suggestions.isEmpty {
             let fallback: String =
-                commandViewModel.parseResult.validationMessage ?? "没有匹配的命令"
+                commandViewModel.parseResult.validationMessage ?? L10n.text(.cmdNoMatch, language: appConfig.descriptionLanguage)
             buildEmptyState(message: fallback)
         } else {
             buildCommandList()

@@ -52,57 +52,59 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// 中文简述。
-    var summary: String {
+    /// 命令提示简述（跟随 descriptionLanguage / desclang）。
+    func summary(language: AppLanguage) -> String {
+        let key: L10nKey
         switch self {
         case .settings:
-            return "打开设置（可选 general / language / hotkey）"
+            key = .cmdSummarySettings
         case .general:
-            return "打开设置 · 通用"
+            key = .cmdSummaryGeneral
         case .hotkey:
-            return "打开设置 · 快捷键"
+            key = .cmdSummaryHotkey
         case .about:
-            return "打开关于窗口"
+            key = .cmdSummaryAbout
         case .permissions:
-            return "打开辅助功能权限引导"
+            key = .cmdSummaryPermissions
         case .language:
-            return "设置界面语言（english / chinese）"
+            key = .cmdSummaryLanguage
         case .codelang:
-            return "设置 Code 翻译语言（english / chinese）"
+            key = .cmdSummaryCodelang
         case .desclang:
-            return "设置描述语言（english / chinese）"
+            key = .cmdSummaryDesclang
         case .style:
-            return "设置外观（auto / liquid / material）"
+            key = .cmdSummaryStyle
         case .format:
-            return "设置复制格式（emoji / code / template）"
+            key = .cmdSummaryFormat
         case .template:
-            return "设置自定义复制模板内容"
+            key = .cmdSummaryTemplate
         case .recent:
-            return "最近使用：clear 或 count <5…20>"
+            key = .cmdSummaryRecent
         case .quit:
-            return "退出应用"
+            key = .cmdSummaryQuit
         case .hide:
-            return "关闭启动器面板"
+            key = .cmdSummaryHide
         case .help:
-            return "列出全部命令"
+            key = .cmdSummaryHelp
         }
+        return L10n.text(key, language: language)
     }
 
     // TODO(后续): /reset — 一键恢复默认设置（本阶段不实现）
 
-    /// 参数取值域描述（无参数时为 nil）。
+    /// 参数取值域描述（无参数时为 nil；命令 token 本身保持英文）。
     var argumentDomainDescription: String? {
         switch self {
         case .settings:
-            return "general | language | hotkey（可省略，默认 general）"
+            return "general | language | hotkey"
         case .language, .codelang, .desclang:
-            return "english | chinese（中文 / zh）"
+            return "english | chinese"
         case .style:
             return "auto | liquid（glass）| material"
         case .format:
             return "emoji | code | template"
         case .template:
-            return "任意模板文本（如 {emoji} {code}）"
+            return "{emoji} {code} {name} {description}"
         case .recent:
             return "clear | count <n>"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
@@ -110,14 +112,24 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// 补全命令名后是否追加尾随空格（表示还可继续补参数）。
-    var shouldAppendTrailingSpaceAfterName: Bool {
+    /// 下一参数的英文类型名占位（半透明 ghost），无参数时为 nil。
+    /// 例如 `/settings` → ` <option>`；用类型名，不用取值域描述。
+    var argumentTypePlaceholder: String? {
         switch self {
-        case .settings, .language, .codelang, .desclang,
-                .style, .format, .template, .recent:
-            return true
+        case .settings:
+            return "<option>"
+        case .language, .codelang, .desclang:
+            return "<language>"
+        case .style:
+            return "<style>"
+        case .format:
+            return "<format>"
+        case .template:
+            return "<template>"
+        case .recent:
+            return "<action>"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
-            return false
+            return nil
         }
     }
 

@@ -53,7 +53,7 @@ final class LauncherController {
                 listViewModel.executeReloadRecentItems()
             }
         )
-        self.commandViewModel = LauncherCommandViewModel(executor: executor)
+        self.commandViewModel = LauncherCommandViewModel(executor: executor, preferences: appConfig)
         executeRegisterFrontAppTracker()
     }
 
@@ -317,6 +317,14 @@ final class LauncherController {
         }
     }
 
+    /// 将 ↑↓ 选中的命令补全写入输入框（实文本，而非半透明 ghost）。
+    private func executeApplyCommandSelection(_ completed: String?) {
+        guard let completed, completed != viewModel.query else {
+            return
+        }
+        viewModel.query = completed
+    }
+
     /// 处理 ↑↓←→；命令模式下仅 ↑↓，不进入最近使用区逻辑。
     private func executeHandleKeyEvent(_ event: NSEvent) -> NSEvent? {
         guard isPresenting, panel?.isKeyWindow == true else {
@@ -334,14 +342,18 @@ final class LauncherController {
         switch event.keyCode {
         case 126:
             if isCommandMode {
-                commandViewModel.executeSelectPrevious()
+                executeApplyCommandSelection(
+                    commandViewModel.executeSelectPrevious()
+                )
             } else {
                 viewModel.executeSelectPrevious()
             }
             return nil
         case 125:
             if isCommandMode {
-                commandViewModel.executeSelectNext()
+                executeApplyCommandSelection(
+                    commandViewModel.executeSelectNext()
+                )
             } else {
                 viewModel.executeSelectNext()
             }

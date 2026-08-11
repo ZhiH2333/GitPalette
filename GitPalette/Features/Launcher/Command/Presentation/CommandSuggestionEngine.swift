@@ -14,32 +14,64 @@ struct CommandSuggestion: Identifiable, Equatable, Sendable {
     let primaryText: String
     /// 弱化次要文案（别名等）
     let secondaryText: String?
-    /// 中文简述
+    /// 提示简述（跟随 descriptionLanguage）
     let summary: String
-    /// Tab / 点击应用的完整补全文本
+    /// Tab / 点击 / ↑↓ 应用的完整补全文本（不含自动尾随空格）
     let completionText: String
+    /// 下一参数英文类型 ghost（仅命令名建议）；参数建议为 nil
+    let argumentTypeGhost: String?
+
+    init(
+        id: String,
+        primaryText: String,
+        secondaryText: String?,
+        summary: String,
+        completionText: String,
+        argumentTypeGhost: String? = nil
+    ) {
+        self.id = id
+        self.primaryText = primaryText
+        self.secondaryText = secondaryText
+        self.summary = summary
+        self.completionText = completionText
+        self.argumentTypeGhost = argumentTypeGhost
+    }
 }
 
 /// 命令建议引擎。
 enum CommandSuggestionEngine {
     /// 根据 query 生成建议列表。
-    static func resolveSuggestions(for query: String) -> [CommandSuggestion] {
+    static func resolveSuggestions(
+        for query: String,
+        language: AppLanguage
+    ) -> [CommandSuggestion] {
         guard query.hasPrefix("/") else {
             return []
         }
-        let parse: LauncherCommandParseResult = LauncherCommandParser.executeParse(query)
+        let parse: LauncherCommandParseResult =
+            LauncherCommandParser.executeParse(query, language: language)
         if let command: LauncherCommand = parse.matchedCommand {
             if command == .help {
-                return executeBuildAllCommandSuggestions()
+                return executeBuildAllCommandSuggestions(language: language)
             }
-            return executeBuildArgumentSuggestions(command: command, query: query, parse: parse)
+            return executeBuildArgumentSuggestions(
+                command: command,
+                query: query,
+                parse: parse,
+                language: language
+            )
         }
-        return executeBuildCommandNameSuggestions(query: query)
+        return executeBuildCommandNameSuggestions(query: query, language: language)
     }
 
     /// 当前最佳补全文本（无候选时为 nil）。
-    static func resolveBestCompletion(for query: String, selectedIndex: Int) -> String? {
-        let suggestions: [CommandSuggestion] = resolveSuggestions(for: query)
+    static func resolveBestCompletion(
+        for query: String,
+        selectedIndex: Int,
+        language: AppLanguage
+    ) -> String? {
+        let suggestions: [CommandSuggestion] =
+            resolveSuggestions(for: query, language: language)
         guard !suggestions.isEmpty else {
             return nil
         }
@@ -48,42 +80,45 @@ enum CommandSuggestionEngine {
     }
 
     /// 未选定命令时：按前缀 / 包含匹配命令名。
-    private static func executeBuildCommandNameSuggestions(query: String) -> [CommandSuggestion] {
+    private static func executeBuildCommandNameSuggestions(
+        query: String,
+        language: AppLanguage
+    ) -> [CommandSuggestion] {
         let body: String = String(query.dropFirst())
         let token: String = body.split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? body
         let prefix: String = token.trimmingCharacters(in: .whitespacesAndNewlines)
         if prefix.isEmpty {
-            return executeBuildAllCommandSuggestions()
+            return executeBuildAllCommandSuggestions(language: language)
         }
         let matches: [(command: LauncherCommand, matchedViaAlias: Bool)] =
             LauncherCommandRegistry.resolvePrefixMatches(prefix: prefix)
-        return matches.map { executeMakeCommandSuggestion($0.command) }
+        return matches.map { executeMakeCommandSuggestion($0.command, language: language) }
     }
 
     /// 全部命令建议（「/」或 /help）。
-    private static func executeBuildAllCommandSuggestions() -> [CommandSuggestion] {
-        LauncherCommandRegistry.allCommands.map { executeMakeCommandSuggestion($0) }
+    private static func executeBuildAllCommandSuggestions(
+        language: AppLanguage
+    ) -> [CommandSuggestion] {
+        LauncherCommandRegistry.allCommands.map {
+            executeMakeCommandSuggestion($0, language: language)
+        }
     }
 
     /// 构造命令名建议行。
     private static func executeMakeCommandSuggestion(
-        _ command: LauncherCommand
+        _ command: LauncherCommand,
+        language: AppLanguage
     ) -> CommandSuggestion {
         let aliasText: String? = command.aliases.isEmpty
             ? nil
             : command.aliases.map { "/" + $0 }.joined(separator: " · ")
-        let completion: String
-        if command.shouldAppendTrailingSpaceAfterName {
-            completion = command.displayName + " "
-        } else {
-            completion = command.displayName
-        }
         return CommandSuggestion(
             id: "cmd-" + command.name,
             primaryText: command.displayName,
             secondaryText: aliasText,
-            summary: command.summary,
-            completionText: completion
+            summary: command.summary(language: language),
+            completionText: command.displayName,
+            argumentTypeGhost: command.argumentTypePlaceholder
         )
     }
 
@@ -91,7 +126,8 @@ enum CommandSuggestionEngine {
     private static func executeBuildArgumentSuggestions(
         command: LauncherCommand,
         query: String,
-        parse: LauncherCommandParseResult
+        parse: LauncherCommandParseResult,
+        language: AppLanguage
     ) -> [CommandSuggestion] {
         switch command {
         case .settings:
@@ -100,9 +136,9 @@ enum CommandSuggestionEngine {
                 query: query,
                 argumentPrefix: parse.rawArgumentText,
                 candidates: [
-                    ("general", "通用设置"),
-                    ("language", "语言设置"),
-                    ("hotkey", "快捷键设置")
+                    ("general", L10n.text(.cmdArgSettingsGeneral, language: language)),
+                    ("language", L10n.text(.cmdArgSettingsLanguage, language: language)),
+                    ("hotkey", L10n.text(.cmdArgSettingsHotkey, language: language))
                 ]
             )
         case .language, .codelang, .desclang:
@@ -111,8 +147,8 @@ enum CommandSuggestionEngine {
                 query: query,
                 argumentPrefix: parse.rawArgumentText,
                 candidates: [
-                    ("english", "English"),
-                    ("chinese", "简体中文（zh）")
+                    ("english", L10n.text(.cmdArgLangEnglish, language: language)),
+                    ("chinese", L10n.text(.cmdArgLangChinese, language: language))
                 ]
             )
         case .style:
@@ -121,9 +157,9 @@ enum CommandSuggestionEngine {
                 query: query,
                 argumentPrefix: parse.rawArgumentText,
                 candidates: [
-                    ("auto", "自动"),
-                    ("liquid", "液态玻璃（glass）"),
-                    ("material", "毛玻璃")
+                    ("auto", L10n.text(.cmdArgStyleAuto, language: language)),
+                    ("liquid", L10n.text(.cmdArgStyleLiquid, language: language)),
+                    ("material", L10n.text(.cmdArgStyleMaterial, language: language))
                 ]
             )
         case .format:
@@ -132,13 +168,17 @@ enum CommandSuggestionEngine {
                 query: query,
                 argumentPrefix: parse.rawArgumentText,
                 candidates: [
-                    ("emoji", "仅表情"),
-                    ("code", "仅 shortcode"),
-                    ("template", "自定义模板")
+                    ("emoji", L10n.text(.cmdArgFormatEmoji, language: language)),
+                    ("code", L10n.text(.cmdArgFormatCode, language: language)),
+                    ("template", L10n.text(.cmdArgFormatTemplate, language: language))
                 ]
             )
         case .recent:
-            return executeBuildRecentSuggestions(query: query, argument: parse.rawArgumentText)
+            return executeBuildRecentSuggestions(
+                query: query,
+                argument: parse.rawArgumentText,
+                language: language
+            )
         case .template:
             if parse.rawArgumentText.isEmpty {
                 return [
@@ -146,21 +186,22 @@ enum CommandSuggestionEngine {
                         id: "arg-template-hint",
                         primaryText: "{emoji} {code}",
                         secondaryText: nil,
-                        summary: "示例模板（可自由编辑）",
+                        summary: L10n.text(.cmdArgTemplateHint, language: language),
                         completionText: "/template {emoji} {code}"
                     )
                 ]
             }
             return []
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
-            return [executeMakeCommandSuggestion(command)]
+            return [executeMakeCommandSuggestion(command, language: language)]
         }
     }
 
     /// /recent 参数建议。
     private static func executeBuildRecentSuggestions(
         query: String,
-        argument: String
+        argument: String,
+        language: AppLanguage
     ) -> [CommandSuggestion] {
         let parts: [String] = argument.split(whereSeparator: { $0.isWhitespace }).map(String.init)
         if parts.isEmpty {
@@ -169,15 +210,15 @@ enum CommandSuggestionEngine {
                     id: "arg-recent-clear",
                     primaryText: "clear",
                     secondaryText: nil,
-                    summary: "清空最近使用",
+                    summary: L10n.text(.cmdArgRecentClear, language: language),
                     completionText: "/recent clear"
                 ),
                 CommandSuggestion(
                     id: "arg-recent-count",
                     primaryText: "count",
                     secondaryText: nil,
-                    summary: "设置保留数量（5…20）",
-                    completionText: "/recent count "
+                    summary: L10n.text(.cmdArgRecentCount, language: language),
+                    completionText: "/recent count"
                 )
             ]
         }
@@ -188,7 +229,7 @@ enum CommandSuggestionEngine {
                     id: "arg-recent-clear",
                     primaryText: "clear",
                     secondaryText: nil,
-                    summary: "清空最近使用",
+                    summary: L10n.text(.cmdArgRecentClear, language: language),
                     completionText: "/recent clear"
                 )
             ].filter { _ in "clear".hasPrefix(head) }
@@ -200,8 +241,8 @@ enum CommandSuggestionEngine {
                         id: "arg-recent-count",
                         primaryText: "count",
                         secondaryText: nil,
-                        summary: "设置保留数量（5…20）",
-                        completionText: "/recent count "
+                        summary: L10n.text(.cmdArgRecentCount, language: language),
+                        completionText: "/recent count"
                     )
                 ]
             }
