@@ -34,4 +34,10 @@ enum LauncherChrome {
     static let rowCornerRadius: CGFloat = 10
     /// 列表水平内边距
     static let listHorizontalPadding: CGFloat = 12
+    /// Footer 水平内边距（贴近系统状态栏节奏）
+    static let footerHorizontalPadding: CGFloat = 16
+    /// Footer 垂直内边距
+    static let footerVerticalPadding: CGFloat = 10
+    /// Footer 元素间距
+    static let footerSpacing: CGFloat = 8
 }

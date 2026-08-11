@@ -65,6 +65,10 @@ enum L10nKey: String, Sendable {
     case copied
     case hintWithRecent
     case hintListOnly
+    case commandMode
+    case suggestionCount
+    case commandHint
+    case commandSearchPlaceholder
     case clear
     case needAccessibilityTitle
     case needAccessibilityBody
@@ -193,6 +197,10 @@ enum L10n {
         .copied: "Copied",
         .hintWithRecent: "↑↓←→ select · ⏎ copy",
         .hintListOnly: "↑↓ select · ⏎ copy",
+        .commandMode: "Command mode",
+        .suggestionCount: " suggestions",
+        .commandHint: "Tab / → complete · ↑↓ select · ⏎ run",
+        .commandSearchPlaceholder: "Type a command, Tab / → to complete…",
         .clear: "Clear",
         .needAccessibilityTitle: "Accessibility required",
         .needAccessibilityBody: "The global hotkey needs GitPalette allowed in System Settings → Privacy & Security → Accessibility so it can open the launcher while other apps are frontmost.",
@@ -308,6 +316,10 @@ enum L10n {
         .copied: "已复制",
         .hintWithRecent: "↑↓←→ 选择 · ⏎ 复制",
         .hintListOnly: "↑↓ 选择 · ⏎ 复制",
+        .commandMode: "命令模式",
+        .suggestionCount: " 条建议",
+        .commandHint: "Tab / → 补全 · ↑↓ 选择 · ⏎ 执行",
+        .commandSearchPlaceholder: "输入命令，Tab / → 补全…",
         .clear: "清除",
         .needAccessibilityTitle: "需要辅助功能权限",
         .needAccessibilityBody: "全局热键需要在「系统设置 → 隐私与安全性 → 辅助功能」中允许 GitPalette，才能在其他应用前台时唤起启动器。",

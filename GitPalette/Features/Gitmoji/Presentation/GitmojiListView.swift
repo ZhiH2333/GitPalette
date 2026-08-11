@@ -49,7 +49,7 @@ struct GitmojiListView: View {
             GitmojiSearchField(
                 text: $viewModel.query,
                 placeholder: commandViewModel.isCommandMode
-                    ? "输入命令，Tab / → 补全…"
+                    ? appConfig.t(.commandSearchPlaceholder)
                     : appConfig.t(.searchPlaceholder),
                 ghostSuffix: commandViewModel.resolveGhostSuffix(for: viewModel.query),
                 focusToken: focusToken,
@@ -283,18 +283,17 @@ struct GitmojiListView: View {
     /// 构建底部状态栏（格式切换 + 计数，不抢搜索焦点）。
     @ViewBuilder
     private func buildFooter() -> some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: LauncherChrome.footerSpacing) {
             if commandViewModel.isCommandMode {
-                Text("命令模式")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text(resolveCommandFooterText())
+                Text(resolveCommandFooterStatusText())
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 Spacer(minLength: 0)
-                Text("Tab / → 补全 · ↑↓ 选择 · Return 执行")
+                Text(appConfig.t(.commandHint))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             } else {
                 Picker(appConfig.t(.copyFormatMenu), selection: $appConfig.copyFormat) {
                     ForEach(CopyFormat.allCases) { format in
@@ -307,28 +306,31 @@ struct GitmojiListView: View {
                 Text(resolveFooterCountText())
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 Spacer(minLength: 0)
                 if let feedback: String = viewModel.copyFeedbackText {
                     Text(feedback)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.green)
+                        .lineLimit(1)
                 } else {
                     Text(resolveHintText())
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, LauncherChrome.footerHorizontalPadding)
+        .padding(.vertical, LauncherChrome.footerVerticalPadding)
     }
 
-    /// 命令模式底部计数。
-    private func resolveCommandFooterText() -> String {
+    /// 命令模式底部状态（跟随 UI 语言）：「命令模式 15 条建议」。
+    private func resolveCommandFooterStatusText() -> String {
         if commandViewModel.suggestions.isEmpty {
-            return "无匹配"
+            return "\(appConfig.t(.commandMode)) · \(appConfig.t(.cmdNoMatch))"
         }
-        return "\(commandViewModel.suggestions.count) 条建议"
+        return "\(appConfig.t(.commandMode)) \(commandViewModel.suggestions.count)\(appConfig.t(.suggestionCount))"
     }
 
     /// 底部计数文案。
