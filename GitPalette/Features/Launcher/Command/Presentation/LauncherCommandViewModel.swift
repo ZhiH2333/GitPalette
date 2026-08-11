@@ -209,10 +209,41 @@ final class LauncherCommandViewModel: ObservableObject {
         return suggestions[selectedIndex].completionText
     }
 
-    /// Return：执行当前解析结果。
+    /// Return：优先执行当前输入；若尚不可执行则尝试高亮建议（与点击行一致）。
     func executeConfirm(query: String) -> LauncherCommandExecutionOutcome {
-        let result: LauncherCommandParseResult =
+        let queryResult: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(query, language: hintLanguage)
+        if queryResult.isExecutable, queryResult.matchedCommand?.isViewOnly != true {
+            return executeRunParseResult(queryResult)
+        }
+        if let selectedOutcome: LauncherCommandExecutionOutcome =
+            executeTryConfirmSelectedSuggestion()
+        {
+            return selectedOutcome
+        }
+        return executeRunParseResult(queryResult)
+    }
+
+    /// 若当前高亮建议可执行，则执行之。
+    private func executeTryConfirmSelectedSuggestion() -> LauncherCommandExecutionOutcome? {
+        guard suggestions.indices.contains(selectedIndex) else {
+            return nil
+        }
+        let completedQuery: String = suggestions[selectedIndex].completionText
+        let completedParse: LauncherCommandParseResult =
+            LauncherCommandParser.executeParse(completedQuery, language: hintLanguage)
+        guard completedParse.isExecutable,
+              completedParse.matchedCommand?.isViewOnly != true
+        else {
+            return nil
+        }
+        return executeRunParseResult(completedParse)
+    }
+
+    /// 写入 parseResult 并交给执行器。
+    private func executeRunParseResult(
+        _ result: LauncherCommandParseResult
+    ) -> LauncherCommandExecutionOutcome {
         parseResult = result
         let outcome: LauncherCommandExecutionOutcome = executor.execute(parseResult: result)
         if case .keptOpen(let message) = outcome {
