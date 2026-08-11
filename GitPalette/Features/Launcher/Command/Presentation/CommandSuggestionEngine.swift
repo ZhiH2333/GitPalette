@@ -138,7 +138,8 @@ enum CommandSuggestionEngine {
                 candidates: [
                     ("general", L10n.text(.cmdArgSettingsGeneral, language: language)),
                     ("language", L10n.text(.cmdArgSettingsLanguage, language: language)),
-                    ("hotkey", L10n.text(.cmdArgSettingsHotkey, language: language))
+                    ("hotkey", L10n.text(.cmdArgSettingsHotkey, language: language)),
+                    ("commands", L10n.text(.cmdArgSettingsCommands, language: language))
                 ]
             )
         case .language, .codelang, .desclang:

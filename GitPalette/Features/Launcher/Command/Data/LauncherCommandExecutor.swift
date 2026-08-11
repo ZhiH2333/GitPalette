@@ -56,9 +56,6 @@ final class LauncherCommandExecutor {
         guard let command: LauncherCommand = parseResult.matchedCommand else {
             return .keptOpen(message: L10n.text(.cmdUnknownCommand, language: hintLanguage))
         }
-        if command.isViewOnly {
-            return .keptOpen(message: nil)
-        }
         guard parseResult.isExecutable else {
             return .keptOpen(
                 message: parseResult.validationMessage
@@ -144,7 +141,8 @@ final class LauncherCommandExecutor {
         case .hide:
             return .dismissed(shouldRestoreFocus: true)
         case .help:
-            return .keptOpen(message: nil)
+            windowPresenter.executeOpenSettings(tab: .commands)
+            return .dismissed(shouldRestoreFocus: false)
         }
     }
 

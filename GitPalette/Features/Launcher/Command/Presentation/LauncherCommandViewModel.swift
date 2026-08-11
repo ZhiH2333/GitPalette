@@ -213,7 +213,7 @@ final class LauncherCommandViewModel: ObservableObject {
     func executeConfirm(query: String) -> LauncherCommandExecutionOutcome {
         let queryResult: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(query, language: hintLanguage)
-        if queryResult.isExecutable, queryResult.matchedCommand?.isViewOnly != true {
+        if queryResult.isExecutable {
             return executeRunParseResult(queryResult)
         }
         if let selectedOutcome: LauncherCommandExecutionOutcome =
@@ -232,9 +232,7 @@ final class LauncherCommandViewModel: ObservableObject {
         let completedQuery: String = suggestions[selectedIndex].completionText
         let completedParse: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(completedQuery, language: hintLanguage)
-        guard completedParse.isExecutable,
-              completedParse.matchedCommand?.isViewOnly != true
-        else {
+        guard completedParse.isExecutable else {
             return nil
         }
         return executeRunParseResult(completedParse)
@@ -262,15 +260,11 @@ final class LauncherCommandViewModel: ObservableObject {
             return nil
         }
         executeSelectIndex(index)
-        // /help 仅供浏览，点击无副作用。
-        if parseResult.matchedCommand == .help {
-            return nil
-        }
         let suggestion: CommandSuggestion = suggestions[index]
         let completedQuery: String = suggestion.completionText
         let completedParse: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(completedQuery, language: hintLanguage)
-        if completedParse.isExecutable, completedParse.matchedCommand?.isViewOnly != true {
+        if completedParse.isExecutable {
             applyCompletion(completedQuery)
             executeUpdateQuery(completedQuery)
             return executeConfirm(query: completedQuery)

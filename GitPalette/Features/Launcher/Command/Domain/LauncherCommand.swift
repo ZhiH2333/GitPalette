@@ -101,7 +101,7 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
     var argumentDomainDescription: String? {
         switch self {
         case .settings:
-            return "general | language | hotkey"
+            return "general | language | hotkey | commands"
         case .language, .codelang, .desclang:
             return "english | chinese"
         case .style:
@@ -142,8 +142,4 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// 是否为「仅浏览」命令（执行无副作用）。
-    var isViewOnly: Bool {
-        self == .help
-    }
 }

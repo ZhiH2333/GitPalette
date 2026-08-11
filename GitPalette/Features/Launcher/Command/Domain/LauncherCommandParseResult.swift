@@ -147,7 +147,7 @@ enum LauncherCommandParser {
             return (true, nil)
         }
         let lower: String = argument.lowercased()
-        if lower == "general" || lower == "language" || lower == "hotkey" {
+        if lower == "general" || lower == "language" || lower == "hotkey" || lower == "commands" {
             return (true, nil)
         }
         return (false, L10n.text(.cmdUnsupportedSettingsTab, language: language))
@@ -288,6 +288,8 @@ enum LauncherCommandParser {
             return .language
         case "hotkey":
             return .hotkey
+        case "commands", "help", "command":
+            return .commands
         default:
             return nil
         }

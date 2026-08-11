@@ -12,6 +12,7 @@ enum L10nKey: String, Sendable {
     case tabGeneral
     case tabHotKey
     case tabLanguage
+    case tabCommands
     case sectionAppearance
     case launcherStyle
     case sectionCopyFormat
@@ -102,6 +103,7 @@ enum L10nKey: String, Sendable {
     case cmdArgSettingsGeneral
     case cmdArgSettingsLanguage
     case cmdArgSettingsHotkey
+    case cmdArgSettingsCommands
     case cmdArgLangEnglish
     case cmdArgLangChinese
     case cmdArgStyleAuto
@@ -152,6 +154,7 @@ enum L10n {
         .tabGeneral: "General",
         .tabHotKey: "Hotkey",
         .tabLanguage: "Language",
+        .tabCommands: "Commands",
         .sectionAppearance: "Appearance",
         .launcherStyle: "Launcher style",
         .sectionCopyFormat: "Copy format",
@@ -223,7 +226,7 @@ enum L10n {
         .formatEmoji: "emoji",
         .formatCode: ":code:",
         .formatCustomTemplate: "Custom template",
-        .cmdSummarySettings: "Open Settings (optional: general / language / hotkey)",
+        .cmdSummarySettings: "Open Settings (optional: general / language / hotkey / commands)",
         .cmdSummaryGeneral: "Open Settings · General",
         .cmdSummaryHotkey: "Open Settings · Hotkey",
         .cmdSummaryAbout: "Open About window",
@@ -241,10 +244,11 @@ enum L10n {
         .cmdArgMenubarMenu: "Dropdown menu with entries for settings, about, quit",
         .cmdArgMenubarLauncher: "Open launcher directly; settings via /settings etc.",
         .cmdUnsupportedMenubarArg: "Use menu or launcher",
-        .cmdSummaryHelp: "List all commands",
+        .cmdSummaryHelp: "Open all commands reference",
         .cmdArgSettingsGeneral: "General settings",
         .cmdArgSettingsLanguage: "Language settings",
         .cmdArgSettingsHotkey: "Hotkey settings",
+        .cmdArgSettingsCommands: "All commands reference",
         .cmdArgLangEnglish: "English",
         .cmdArgLangChinese: "Simplified Chinese (zh)",
         .cmdArgStyleAuto: "Automatic",
@@ -279,6 +283,7 @@ enum L10n {
         .tabGeneral: "通用",
         .tabHotKey: "快捷键",
         .tabLanguage: "语言",
+        .tabCommands: "全部指令",
         .sectionAppearance: "外观",
         .launcherStyle: "启动器风格",
         .sectionCopyFormat: "复制格式",
@@ -350,7 +355,7 @@ enum L10n {
         .formatEmoji: "emoji",
         .formatCode: ":code:",
         .formatCustomTemplate: "自定义模板",
-        .cmdSummarySettings: "打开设置（可选 general / language / hotkey）",
+        .cmdSummarySettings: "打开设置（可选 general / language / hotkey / commands）",
         .cmdSummaryGeneral: "打开设置 · 通用",
         .cmdSummaryHotkey: "打开设置 · 快捷键",
         .cmdSummaryAbout: "打开关于窗口",
@@ -368,10 +373,11 @@ enum L10n {
         .cmdArgMenubarMenu: "下拉菜单，含设置、关于、退出等入口",
         .cmdArgMenubarLauncher: "直接打开启动器；设置等功能通过 /settings 等命令访问",
         .cmdUnsupportedMenubarArg: "请使用 menu 或 launcher",
-        .cmdSummaryHelp: "列出全部命令",
+        .cmdSummaryHelp: "打开全部指令说明",
         .cmdArgSettingsGeneral: "通用设置",
         .cmdArgSettingsLanguage: "语言设置",
         .cmdArgSettingsHotkey: "快捷键设置",
+        .cmdArgSettingsCommands: "全部指令说明",
         .cmdArgLangEnglish: "English",
         .cmdArgLangChinese: "简体中文（zh）",
         .cmdArgStyleAuto: "自动",

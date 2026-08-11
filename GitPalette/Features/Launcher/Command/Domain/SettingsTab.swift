@@ -12,6 +12,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable, Sendable {
     case general
     case language
     case hotkey
+    case commands
 
     var id: String { rawValue }
 }

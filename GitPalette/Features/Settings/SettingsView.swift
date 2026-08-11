@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  GitPalette
 //
-//  原生 Settings：通用 / 语言 / 快捷键。
+//  原生 Settings：通用 / 语言 / 快捷键 / 全部指令。
 //
 
 import SwiftUI
@@ -37,6 +37,11 @@ struct SettingsView: View {
                 Label(preferences.t(.tabHotKey), systemImage: "keyboard")
             }
             .tag(SettingsTab.hotkey)
+            CommandsSettingsTab(preferences: preferences)
+                .tabItem {
+                    Label(preferences.t(.tabCommands), systemImage: "list.bullet.indent")
+                }
+                .tag(SettingsTab.commands)
         }
         .frame(width: 480, height: 400)
     }
