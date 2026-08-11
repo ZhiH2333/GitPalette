@@ -11,6 +11,7 @@ import SwiftUI
 struct GitPaletteApp: App {
     @StateObject private var preferences: PreferencesStore
     @StateObject private var hotKeyService: HotKeyService
+    @StateObject private var windowPresenter: AppWindowPresenter
     private let recentStore: RecentGitmojiStore
     private let launcherController: LauncherController
 
@@ -19,12 +20,17 @@ struct GitPaletteApp: App {
         let recentStore: RecentGitmojiStore = RecentGitmojiStore(
             resolveMaxCount: { preferences.recentMaxCount }
         )
+        let hotKeyService: HotKeyService = HotKeyService()
+        let windowPresenter: AppWindowPresenter = AppWindowPresenter()
         _preferences = StateObject(wrappedValue: preferences)
-        _hotKeyService = StateObject(wrappedValue: HotKeyService())
+        _hotKeyService = StateObject(wrappedValue: hotKeyService)
+        _windowPresenter = StateObject(wrappedValue: windowPresenter)
         self.recentStore = recentStore
         self.launcherController = LauncherController(
             appConfig: preferences,
-            recentStore: recentStore
+            recentStore: recentStore,
+            hotKeyService: hotKeyService,
+            windowPresenter: windowPresenter
         )
     }
 
@@ -33,7 +39,8 @@ struct GitPaletteApp: App {
             LauncherMenuView(
                 preferences: preferences,
                 launcherController: launcherController,
-                hotKeyService: hotKeyService
+                hotKeyService: hotKeyService,
+                windowPresenter: windowPresenter
             )
         } label: {
             Label(preferences.appName, systemImage: "paintpalette.fill")
@@ -55,6 +62,7 @@ struct GitPaletteApp: App {
             SettingsView(
                 preferences: preferences,
                 hotKeyService: hotKeyService,
+                windowPresenter: windowPresenter,
                 launcherController: launcherController
             )
             .applyWindowForegroundFocus()

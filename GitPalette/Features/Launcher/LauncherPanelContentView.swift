@@ -11,17 +11,23 @@ import SwiftUI
 struct LauncherPanelContentView: View {
     @ObservedObject var appConfig: AppConfig
     @ObservedObject var viewModel: GitmojiListViewModel
+    @ObservedObject var commandViewModel: LauncherCommandViewModel
     let focusToken: UUID
     let onDismiss: () -> Void
+    let onDismissWithoutFocusRestore: () -> Void
     let onConfirmCopy: () -> Void
+    let onRequestComplete: (String) -> String?
 
     var body: some View {
         GitmojiListView(
             appConfig: appConfig,
             viewModel: viewModel,
+            commandViewModel: commandViewModel,
             focusToken: focusToken,
             onDismiss: onDismiss,
-            onConfirmCopy: onConfirmCopy
+            onDismissWithoutFocusRestore: onDismissWithoutFocusRestore,
+            onConfirmCopy: onConfirmCopy,
+            onRequestComplete: onRequestComplete
         )
         .applyLauncherGlassShell(style: appConfig.appearanceStyle)
         // 仅留阴影绘制空间；根必须全透明，否则圆角外会出现方形遮罩。

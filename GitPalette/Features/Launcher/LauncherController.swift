@@ -14,6 +14,7 @@ final class LauncherController {
     private let appConfig: AppConfig
     private let recentStore: RecentGitmojiStore
     private let viewModel: GitmojiListViewModel
+    private let commandViewModel: LauncherCommandViewModel
     private var panel: NSPanel?
     private var hostingView: TransparentHostingView?
     private var resignObserver: NSObjectProtocol?
@@ -26,17 +27,33 @@ final class LauncherController {
     init(
         appConfig: AppConfig,
         recentStore: RecentGitmojiStore,
+        hotKeyService: HotKeyService,
+        windowPresenter: AppWindowPresenter,
         repository: GitmojiRepository? = nil
     ) {
         self.appConfig = appConfig
         self.recentStore = recentStore
         let resolvedRepository: GitmojiRepository =
             repository ?? ((try? BundleGitmojiRepository()) ?? EmptyGitmojiRepository())
-        self.viewModel = GitmojiListViewModel(
+        let listViewModel: GitmojiListViewModel = GitmojiListViewModel(
             repository: resolvedRepository,
             recentStore: recentStore,
             appConfig: appConfig
         )
+        self.viewModel = listViewModel
+        let executor: LauncherCommandExecutor = LauncherCommandExecutor(
+            preferences: appConfig,
+            windowPresenter: windowPresenter,
+            hotKeyService: hotKeyService,
+            onClearRecent: {
+                recentStore.executeClear()
+                listViewModel.executeReloadRecentItems()
+            },
+            onReloadRecent: {
+                listViewModel.executeReloadRecentItems()
+            }
+        )
+        self.commandViewModel = LauncherCommandViewModel(executor: executor)
         executeRegisterFrontAppTracker()
     }
 
@@ -66,6 +83,7 @@ final class LauncherController {
         }
         executeCapturePreviousFrontAppIfNeeded()
         viewModel.executeResetForPresentation()
+        commandViewModel.executeReset()
         focusToken = UUID()
         let panel: NSPanel = resolvePanel()
         executeSyncPanelSize(panel)
@@ -114,12 +132,44 @@ final class LauncherController {
         }
     }
 
-    /// 复制选中项并关闭；无结果时保持打开。
+    /// 复制选中项或执行命令；无结果时保持打开。
     private func executeConfirmCopy() {
+        if commandViewModel.isCommandMode {
+            executeConfirmCommand()
+            return
+        }
         let didCopy: Bool = viewModel.copySelected()
         if didCopy {
             dismiss(shouldRestoreFocus: true)
         }
+    }
+
+    /// 执行当前斜杠命令。
+    private func executeConfirmCommand() {
+        let outcome: LauncherCommandExecutionOutcome =
+            commandViewModel.executeConfirm(query: viewModel.query)
+        switch outcome {
+        case .dismissed(let shouldRestoreFocus):
+            dismiss(shouldRestoreFocus: shouldRestoreFocus)
+        case .quitApp:
+            dismiss(shouldRestoreFocus: false)
+        case .keptOpen:
+            executeRefreshHostingContent()
+        }
+    }
+
+    /// Tab 补全命令。
+    private func executeCompleteCommand(current: String) -> String? {
+        guard current.hasPrefix("/") else {
+            return nil
+        }
+        commandViewModel.executeUpdateQuery(current)
+        guard let completed: String = commandViewModel.executeComplete(query: current) else {
+            return nil
+        }
+        // 由 SearchField Coordinator 写回 text；此处先写 query 会触发 stringValue 赋值并全选。
+        commandViewModel.executeUpdateQuery(completed)
+        return completed
     }
 
     /// 持续记住「非自身」的前台 App。
@@ -196,12 +246,19 @@ final class LauncherController {
         LauncherPanelContentView(
             appConfig: appConfig,
             viewModel: viewModel,
+            commandViewModel: commandViewModel,
             focusToken: focusToken,
             onDismiss: { [weak self] in
                 self?.dismiss(shouldRestoreFocus: true)
             },
+            onDismissWithoutFocusRestore: { [weak self] in
+                self?.dismiss(shouldRestoreFocus: false)
+            },
             onConfirmCopy: { [weak self] in
                 self?.executeConfirmCopy()
+            },
+            onRequestComplete: { [weak self] current in
+                self?.executeCompleteCommand(current: current)
             }
         )
     }
@@ -260,7 +317,7 @@ final class LauncherController {
         }
     }
 
-    /// 处理 ↑↓←→；Esc 原样放行给字段编辑器。
+    /// 处理 ↑↓←→；命令模式下仅 ↑↓，不进入最近使用区逻辑。
     private func executeHandleKeyEvent(_ event: NSEvent) -> NSEvent? {
         guard isPresenting, panel?.isKeyWindow == true else {
             return event
@@ -273,21 +330,30 @@ final class LauncherController {
             || event.modifierFlags.contains(.control) {
             return event
         }
+        let isCommandMode: Bool = viewModel.query.hasPrefix("/")
         switch event.keyCode {
         case 126:
-            viewModel.executeSelectPrevious()
+            if isCommandMode {
+                commandViewModel.executeSelectPrevious()
+            } else {
+                viewModel.executeSelectPrevious()
+            }
             return nil
         case 125:
-            viewModel.executeSelectNext()
+            if isCommandMode {
+                commandViewModel.executeSelectNext()
+            } else {
+                viewModel.executeSelectNext()
+            }
             return nil
         case 123:
-            guard viewModel.selectionFocus == .recent else {
+            guard !isCommandMode, viewModel.selectionFocus == .recent else {
                 return event
             }
             viewModel.executeSelectLeft()
             return nil
         case 124:
-            guard viewModel.selectionFocus == .recent else {
+            guard !isCommandMode, viewModel.selectionFocus == .recent else {
                 return event
             }
             viewModel.executeSelectRight()

@@ -7,19 +7,22 @@
 
 import SwiftUI
 
-/// Gitmoji 搜索与复制主界面。
+/// Gitmoji 搜索与复制主界面（含「/」命令模式互斥展示）。
 struct GitmojiListView: View {
     @ObservedObject var appConfig: AppConfig
     @ObservedObject var viewModel: GitmojiListViewModel
+    @ObservedObject var commandViewModel: LauncherCommandViewModel
     let focusToken: UUID
     let onDismiss: () -> Void
+    let onDismissWithoutFocusRestore: () -> Void
     let onConfirmCopy: () -> Void
+    let onRequestComplete: (String) -> String?
 
     var body: some View {
         VStack(spacing: 0) {
             buildSpotlightSearchRow()
             Divider().opacity(0.22)
-            if viewModel.shouldShowRecentSection {
+            if !commandViewModel.isCommandMode, viewModel.shouldShowRecentSection {
                 buildRecentSection()
                 Divider().opacity(0.18)
             }
@@ -27,22 +30,31 @@ struct GitmojiListView: View {
             buildFooter()
         }
         .frame(width: LauncherChrome.contentWidth, height: LauncherChrome.contentHeight)
+        .onChangeCompat(of: viewModel.query) { newValue in
+            commandViewModel.executeUpdateQuery(newValue)
+        }
+        .onAppear {
+            commandViewModel.executeUpdateQuery(viewModel.query)
+        }
     }
 
     /// Spotlight 风格搜索行：放大镜 + 大字号输入 + 清除。
     @ViewBuilder
     private func buildSpotlightSearchRow() -> some View {
         HStack(alignment: .center, spacing: 14) {
-            Image(systemName: "magnifyingglass")
+            Image(systemName: commandViewModel.isCommandMode ? "chevron.left.forwardslash.chevron.right" : "magnifyingglass")
                 .font(.system(size: LauncherChrome.searchIconPointSize, weight: .medium))
                 .foregroundStyle(.secondary)
                 .frame(width: 28, alignment: .center)
             GitmojiSearchField(
                 text: $viewModel.query,
-                placeholder: appConfig.t(.searchPlaceholder),
+                placeholder: commandViewModel.isCommandMode
+                    ? "输入命令，Tab 补全…"
+                    : appConfig.t(.searchPlaceholder),
                 focusToken: focusToken,
                 onSubmit: onConfirmCopy,
-                onCancel: onDismiss
+                onCancel: onDismiss,
+                onRequestComplete: onRequestComplete
             )
             .frame(maxWidth: .infinity, minHeight: 28)
             if !viewModel.query.isEmpty {
@@ -129,15 +141,85 @@ struct GitmojiListView: View {
         return Color.primary.opacity(0.06)
     }
 
-    /// 构建结果区（列表或空态）。
+    /// 构建结果区（命令模式 / 列表 / 空态）。
     @ViewBuilder
     private func buildResultArea() -> some View {
-        if viewModel.isDataEmpty {
+        if commandViewModel.isCommandMode {
+            buildCommandResultArea()
+        } else if viewModel.isDataEmpty {
             buildEmptyState(message: appConfig.t(.noGitmojiData))
         } else if viewModel.filtered.isEmpty {
             buildEmptyState(message: appConfig.t(.noMatch))
         } else {
             buildList()
+        }
+    }
+
+    /// 命令模式结果区。
+    @ViewBuilder
+    private func buildCommandResultArea() -> some View {
+        if let message: String = commandViewModel.statusMessage, !message.isEmpty {
+            buildEmptyState(message: message)
+        } else if commandViewModel.suggestions.isEmpty {
+            let fallback: String =
+                commandViewModel.parseResult.validationMessage ?? "没有匹配的命令"
+            buildEmptyState(message: fallback)
+        } else {
+            buildCommandList()
+        }
+    }
+
+    /// 命令建议列表。
+    @ViewBuilder
+    private func buildCommandList() -> some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 2) {
+                    ForEach(Array(commandViewModel.suggestions.enumerated()), id: \.element.id) { index, suggestion in
+                        CommandRowView(
+                            suggestion: suggestion,
+                            isSelected: index == commandViewModel.selectedIndex
+                        )
+                        .id(suggestion.id)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            executeActivateCommandSuggestion(at: index)
+                        }
+                    }
+                }
+                .padding(.horizontal, LauncherChrome.listHorizontalPadding)
+                .padding(.vertical, 6)
+            }
+            .onChangeCompat(of: commandViewModel.selectedIndex) { newValue in
+                executeScrollToCommandSelection(proxy: proxy, index: newValue)
+            }
+        }
+    }
+
+    /// 点击命令建议：可执行则执行并关闭，否则补全。
+    private func executeActivateCommandSuggestion(at index: Int) {
+        let outcome: LauncherCommandExecutionOutcome? =
+            commandViewModel.executeActivateSuggestion(
+                at: index,
+                currentQuery: viewModel.query,
+                applyCompletion: { completed in
+                    viewModel.query = completed
+                }
+            )
+        guard let outcome else {
+            return
+        }
+        switch outcome {
+        case .dismissed(let shouldRestoreFocus):
+            if shouldRestoreFocus {
+                onDismiss()
+            } else {
+                onDismissWithoutFocusRestore()
+            }
+        case .quitApp:
+            onDismissWithoutFocusRestore()
+        case .keptOpen:
+            break
         }
     }
 
@@ -201,30 +283,51 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildFooter() -> some View {
         HStack(spacing: 10) {
-            Picker(appConfig.t(.copyFormatMenu), selection: $appConfig.copyFormat) {
-                ForEach(CopyFormat.allCases) { format in
-                    Text(format.displayName(language: appConfig.uiLanguage)).tag(format)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(maxWidth: 140)
-            Text(resolveFooterCountText())
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-            if let feedback: String = viewModel.copyFeedbackText {
-                Text(feedback)
+            if commandViewModel.isCommandMode {
+                Text("命令模式")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.green)
-            } else {
-                Text(resolveHintText())
+                    .foregroundStyle(.secondary)
+                Text(resolveCommandFooterText())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                Text("Tab 补全 · ↑↓ 选择 · Return 执行")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+            } else {
+                Picker(appConfig.t(.copyFormatMenu), selection: $appConfig.copyFormat) {
+                    ForEach(CopyFormat.allCases) { format in
+                        Text(format.displayName(language: appConfig.uiLanguage)).tag(format)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: 140)
+                Text(resolveFooterCountText())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                if let feedback: String = viewModel.copyFeedbackText {
+                    Text(feedback)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.green)
+                } else {
+                    Text(resolveHintText())
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    /// 命令模式底部计数。
+    private func resolveCommandFooterText() -> String {
+        if commandViewModel.suggestions.isEmpty {
+            return "无匹配"
+        }
+        return "\(commandViewModel.suggestions.count) 条建议"
     }
 
     /// 底部计数文案。
@@ -252,6 +355,17 @@ struct GitmojiListView: View {
     /// 将选中行滚入可视区域。
     private func executeScrollToSelection(proxy: ScrollViewProxy, index: Int) {
         let items: [Gitmoji] = viewModel.filtered
+        guard items.indices.contains(index) else {
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.12)) {
+            proxy.scrollTo(items[index].id, anchor: .center)
+        }
+    }
+
+    /// 将命令选中行滚入可视区域。
+    private func executeScrollToCommandSelection(proxy: ScrollViewProxy, index: Int) {
+        let items: [CommandSuggestion] = commandViewModel.suggestions
         guard items.indices.contains(index) else {
             return
         }

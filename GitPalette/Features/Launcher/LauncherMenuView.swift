@@ -13,6 +13,7 @@ struct LauncherMenuView: View {
     @ObservedObject var preferences: PreferencesStore
     var launcherController: LauncherController
     @ObservedObject var hotKeyService: HotKeyService
+    @ObservedObject var windowPresenter: AppWindowPresenter
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -45,7 +46,13 @@ struct LauncherMenuView: View {
             executeQuitApp()
         }
         .onAppear {
+            executeRegisterWindowHandlers()
             executeBootstrapHotKey()
+        }
+        .background {
+            if #available(macOS 14.0, *) {
+                OpenSettingsHandlerBinder(windowPresenter: windowPresenter)
+            }
         }
         .onChangeCompat(of: hotKeyService.permissionGuideToken) { token in
             guard token != nil else {
@@ -56,6 +63,30 @@ struct LauncherMenuView: View {
             }
             executeOpenAccessibilityWindow()
         }
+    }
+
+    /// 注册命令系统可用的窗口打开回调。
+    private func executeRegisterWindowHandlers() {
+        windowPresenter.executeRegisterHandlers(
+            openAbout: { [openWindow, preferences] in
+                DispatchQueue.main.async {
+                    AppWindowFocus.executePrepareForWindowPresentation()
+                    openWindow(id: AppWindowID.about)
+                    AppWindowFocus.executeBringToFront(
+                        titleContaining: ["关于", "About", preferences.appName]
+                    )
+                }
+            },
+            openPermissions: { [openWindow] in
+                DispatchQueue.main.async {
+                    AppWindowFocus.executePrepareForWindowPresentation()
+                    openWindow(id: AppWindowID.accessibilityPermission)
+                    AppWindowFocus.executeBringToFront(
+                        titleContaining: ["辅助功能", "Accessibility", "权限"]
+                    )
+                }
+            }
+        )
     }
 
     /// 启动热键服务；已授权则打开启动器，未授权且需引导时才弹权限窗。
@@ -133,5 +164,23 @@ struct LauncherMenuView: View {
     /// 退出应用。
     private func executeQuitApp() {
         NSApplication.shared.terminate(nil)
+    }
+}
+
+/// macOS 14+：把 Environment.openSettings 接到命令开设置路径。
+@available(macOS 14.0, *)
+private struct OpenSettingsHandlerBinder: View {
+    @ObservedObject var windowPresenter: AppWindowPresenter
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+            .onAppear {
+                windowPresenter.executeRegisterOpenSettingsHandler {
+                    openSettings()
+                }
+            }
     }
 }

@@ -11,10 +11,11 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var preferences: PreferencesStore
     @ObservedObject var hotKeyService: HotKeyService
+    @ObservedObject var windowPresenter: AppWindowPresenter
     var launcherController: LauncherController
 
     var body: some View {
-        TabView {
+        TabView(selection: $windowPresenter.settingsTab) {
             GeneralSettingsTab(
                 preferences: preferences,
                 launcherController: launcherController
@@ -22,10 +23,12 @@ struct SettingsView: View {
             .tabItem {
                 Label(preferences.t(.tabGeneral), systemImage: "gearshape")
             }
+            .tag(SettingsTab.general)
             LanguageSettingsTab(preferences: preferences)
                 .tabItem {
                     Label(preferences.t(.tabLanguage), systemImage: "globe")
                 }
+                .tag(SettingsTab.language)
             HotKeySettingsTab(
                 preferences: preferences,
                 hotKeyService: hotKeyService
@@ -33,6 +36,7 @@ struct SettingsView: View {
             .tabItem {
                 Label(preferences.t(.tabHotKey), systemImage: "keyboard")
             }
+            .tag(SettingsTab.hotkey)
         }
         .frame(width: 480, height: 400)
     }
