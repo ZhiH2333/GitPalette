@@ -203,52 +203,39 @@ enum CommandSuggestionEngine {
         argument: String,
         language: AppLanguage
     ) -> [CommandSuggestion] {
+        let clearSuggestion: CommandSuggestion = CommandSuggestion(
+            id: "arg-recent-clear",
+            primaryText: "clear",
+            secondaryText: nil,
+            summary: L10n.text(.cmdArgRecentClear, language: language),
+            completionText: "/recent clear"
+        )
+        let countSuggestion: CommandSuggestion = CommandSuggestion(
+            id: "arg-recent-count",
+            primaryText: "count",
+            secondaryText: nil,
+            summary: L10n.text(.cmdArgRecentCount, language: language),
+            completionText: "/recent count"
+        )
         let parts: [String] = argument.split(whereSeparator: { $0.isWhitespace }).map(String.init)
         if parts.isEmpty {
-            return [
-                CommandSuggestion(
-                    id: "arg-recent-clear",
-                    primaryText: "clear",
-                    secondaryText: nil,
-                    summary: L10n.text(.cmdArgRecentClear, language: language),
-                    completionText: "/recent clear"
-                ),
-                CommandSuggestion(
-                    id: "arg-recent-count",
-                    primaryText: "count",
-                    secondaryText: nil,
-                    summary: L10n.text(.cmdArgRecentCount, language: language),
-                    completionText: "/recent count"
-                )
-            ]
+            return [clearSuggestion, countSuggestion]
         }
         let head: String = parts[0].lowercased()
-        if "clear".hasPrefix(head), parts.count == 1 {
-            return [
-                CommandSuggestion(
-                    id: "arg-recent-clear",
-                    primaryText: "clear",
-                    secondaryText: nil,
-                    summary: L10n.text(.cmdArgRecentClear, language: language),
-                    completionText: "/recent clear"
-                )
-            ].filter { _ in "clear".hasPrefix(head) }
+        // 已完整选中 clear/count：仍展示两者，便于 ↑↓ 切换。
+        if parts.count == 1, head == "clear" || head == "count" {
+            return [clearSuggestion, countSuggestion]
+        }
+        if parts.count == 1, "clear".hasPrefix(head), "count".hasPrefix(head) {
+            return [clearSuggestion, countSuggestion]
+        }
+        if parts.count == 1, "clear".hasPrefix(head) {
+            return [clearSuggestion]
         }
         if "count".hasPrefix(head) {
             if parts.count == 1 {
-                return [
-                    CommandSuggestion(
-                        id: "arg-recent-count",
-                        primaryText: "count",
-                        secondaryText: nil,
-                        summary: L10n.text(.cmdArgRecentCount, language: language),
-                        completionText: "/recent count"
-                    )
-                ]
+                return [countSuggestion]
             }
-            return []
-        }
-        if head == "clear" || head == "count" {
             return []
         }
         return []
@@ -265,28 +252,16 @@ enum CommandSuggestionEngine {
         let filtered: [(String, String)]
         if prefixLower.isEmpty {
             filtered = candidates
+        } else if candidates.contains(where: { $0.value == prefixLower }) {
+            // 已完整选中某一参数：仍展示全部候选，便于 ↑↓ 切回其他项。
+            filtered = candidates
         } else {
             filtered = candidates.filter { candidate in
                 candidate.value.hasPrefix(prefixLower)
-                    || candidate.value == prefixLower
             }
         }
         if filtered.isEmpty {
             return []
-        }
-        // 已有完整唯一参数时不再展示建议（避免 Return 前干扰）。
-        if filtered.count == 1,
-           filtered[0].0 == prefixLower,
-           !query.hasSuffix(" ") {
-            return [
-                CommandSuggestion(
-                    id: "arg-\(command.name)-\(filtered[0].0)",
-                    primaryText: filtered[0].0,
-                    secondaryText: nil,
-                    summary: filtered[0].1,
-                    completionText: "/\(command.name) \(filtered[0].0)"
-                )
-            ]
         }
         return filtered.map { value, summary in
             CommandSuggestion(

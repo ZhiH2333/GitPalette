@@ -322,6 +322,8 @@ final class LauncherController {
         guard let completed, completed != viewModel.query else {
             return
         }
+        // 先标记跳过建议重建，再写 query（onChange → executeUpdateQuery）。
+        commandViewModel.executeBeginArrowCompletionApply()
         viewModel.query = completed
     }
 

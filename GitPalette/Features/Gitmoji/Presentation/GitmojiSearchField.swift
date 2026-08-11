@@ -50,8 +50,8 @@ struct GitmojiSearchField: NSViewRepresentable {
     func updateNSView(_ nsView: SpotlightSearchContainer, context: Context) {
         let field: NSTextField = nsView.field
         if field.stringValue != text {
-            field.stringValue = text
-            executeMoveCursorToEnd(in: field)
+            // 编辑中必须同步 field editor；只写 stringValue 会把插入点打回行首。
+            executeApplyExternalText(text, to: field)
         }
         field.font = .systemFont(ofSize: LauncherChrome.searchTextPointSize, weight: .regular)
         field.placeholderString = placeholder
@@ -77,16 +77,32 @@ struct GitmojiSearchField: NSViewRepresentable {
         )
     }
 
-    /// 将插入点移到文本末尾。
-    private func executeMoveCursorToEnd(in field: NSTextField) {
-        let length: Int = (field.stringValue as NSString).length
-        let range: NSRange = NSRange(location: length, length: 0)
+    /// 外部（↑↓ 补全等）写入文本：同步 cell + field editor，并把插入点放到末尾。
+    private func executeApplyExternalText(_ newText: String, to field: NSTextField) {
+        field.stringValue = newText
+        let end: Int = (newText as NSString).length
+        let endRange: NSRange = NSRange(location: end, length: 0)
+        if let editor: NSTextView = field.currentEditor() as? NSTextView {
+            if editor.string != newText {
+                editor.string = newText
+            }
+            editor.setSelectedRange(endRange)
+            return
+        }
         if let editor: NSText = field.currentEditor() {
-            editor.selectedRange = range
+            editor.string = newText
+            editor.selectedRange = endRange
             return
         }
         DispatchQueue.main.async {
-            field.currentEditor()?.selectedRange = range
+            if let editor: NSTextView = field.currentEditor() as? NSTextView {
+                if editor.string != newText {
+                    editor.string = newText
+                }
+                editor.setSelectedRange(endRange)
+            } else {
+                field.currentEditor()?.selectedRange = endRange
+            }
         }
     }
 
@@ -178,6 +194,14 @@ struct GitmojiSearchField: NSViewRepresentable {
                 return true
             }
             if commandSelector == #selector(NSResponder.insertBacktab(_:)) {
+                return true
+            }
+            // ↑↓ 由 LauncherController 本地监视负责选中；此处吞掉，避免单行 field editor
+            // 把 moveUp: 解释成「插入点移到行首」。
+            if commandSelector == #selector(NSResponder.moveUp(_:))
+                || commandSelector == #selector(NSResponder.moveDown(_:))
+                || commandSelector == #selector(NSResponder.moveUpAndModifySelection(_:))
+                || commandSelector == #selector(NSResponder.moveDownAndModifySelection(_:)) {
                 return true
             }
             // Spotlight：光标在末尾时 → 采纳半透明补全。

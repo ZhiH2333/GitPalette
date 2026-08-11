@@ -23,6 +23,8 @@ final class LauncherCommandViewModel: ObservableObject {
     private let preferences: PreferencesStore
     private var cancellables: Set<AnyCancellable> = []
     private var latestQuery: String = ""
+    /// ↑↓ 回填补全后跳过一次建议刷新，避免列表被收窄后无法继续切换。
+    private var shouldSkipNextSuggestionRefresh: Bool = false
 
     init(executor: LauncherCommandExecutor, preferences: PreferencesStore) {
         self.executor = executor
@@ -121,6 +123,12 @@ final class LauncherCommandViewModel: ObservableObject {
         statusMessage = nil
         parseResult = .notCommandMode
         latestQuery = ""
+        shouldSkipNextSuggestionRefresh = false
+    }
+
+    /// ↑↓ 即将把补全写入输入框：下一次 executeUpdateQuery 只同步解析，不重建建议列表。
+    func executeBeginArrowCompletionApply() {
+        shouldSkipNextSuggestionRefresh = true
     }
 
     /// 同步 query 并刷新建议。
@@ -131,6 +139,12 @@ final class LauncherCommandViewModel: ObservableObject {
         guard parseResult.isCommandMode else {
             suggestions = []
             selectedIndex = 0
+            shouldSkipNextSuggestionRefresh = false
+            return
+        }
+        // ↑↓ 回填补全：保留当前建议列表与 selectedIndex，避免收窄后无法切回。
+        if shouldSkipNextSuggestionRefresh {
+            shouldSkipNextSuggestionRefresh = false
             return
         }
         suggestions = CommandSuggestionEngine.resolveSuggestions(
