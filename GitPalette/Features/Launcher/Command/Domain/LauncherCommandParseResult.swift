@@ -116,9 +116,26 @@ enum LauncherCommandParser {
                 return (false, L10n.text(.cmdNeedTemplate, language: language))
             }
             return (true, nil)
+        case .menubar:
+            return executeValidateMenubar(argument, language: language)
         case .recent:
             return executeValidateRecent(argument, language: language)
         }
+    }
+
+    /// 校验 /menubar 参数。
+    private static func executeValidateMenubar(
+        _ argument: String,
+        language: AppLanguage
+    ) -> (isExecutable: Bool, message: String?) {
+        if argument.isEmpty {
+            return (false, L10n.text(.cmdUnsupportedMenubarArg, language: language))
+        }
+        let lower: String = argument.lowercased()
+        if lower == "menu" || lower == "launcher" {
+            return (true, nil)
+        }
+        return (false, L10n.text(.cmdUnsupportedMenubarArg, language: language))
     }
 
     /// 校验 /settings 参数。
@@ -235,6 +252,13 @@ enum LauncherCommandParser {
         default:
             return nil
         }
+    }
+
+    /// 解析菜单栏点击行为参数。
+    static func resolveMenuBarClickBehavior(_ argument: String) -> MenuBarClickBehavior? {
+        let normalized: String = argument.trimmingCharacters(in: .whitespaces).lowercased()
+        if normalized.isEmpty { return nil }
+        return MenuBarClickBehavior.allCases.first { $0.rawValue == normalized }
     }
 
     /// 解析复制格式参数。

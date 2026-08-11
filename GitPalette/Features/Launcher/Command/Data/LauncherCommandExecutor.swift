@@ -128,6 +128,14 @@ final class LauncherCommandExecutor {
             return .dismissed(shouldRestoreFocus: true)
         case .recent:
             return executeRecent(argument)
+        case .menubar:
+            guard let behavior: MenuBarClickBehavior =
+                LauncherCommandParser.resolveMenuBarClickBehavior(argument)
+            else {
+                return .keptOpen(message: L10n.text(.cmdUnsupportedMenubarArg, language: hintLanguage))
+            }
+            preferences.menuBarClickBehavior = behavior
+            return .dismissed(shouldRestoreFocus: true)
         case .quit:
             DispatchQueue.main.async {
                 NSApplication.shared.terminate(nil)

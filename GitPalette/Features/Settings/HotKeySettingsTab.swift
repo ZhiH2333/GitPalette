@@ -14,6 +14,18 @@ struct HotKeySettingsTab: View {
 
     var body: some View {
         Form {
+            Section(preferences.t(.menuBarBehavior)) {
+                Picker(preferences.t(.menuBarBehavior), selection: $preferences.menuBarClickBehavior) {
+                    ForEach(MenuBarClickBehavior.allCases) { behavior in
+                        Text(behavior.displayName(language: preferences.uiLanguage)).tag(behavior)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(preferences.t(.menuBarBehaviorHint))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Section(preferences.t(.sectionLauncherHotKey)) {
                 HStack {
                     Text(preferences.t(.toggleLauncher))

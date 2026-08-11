@@ -36,12 +36,18 @@ struct GitPaletteApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            LauncherMenuView(
-                preferences: preferences,
-                launcherController: launcherController,
-                hotKeyService: hotKeyService,
-                windowPresenter: windowPresenter
-            )
+            if preferences.menuBarClickBehavior == .launcher {
+                LauncherDirectView(
+                    launcherController: launcherController
+                )
+            } else {
+                LauncherMenuView(
+                    preferences: preferences,
+                    launcherController: launcherController,
+                    hotKeyService: hotKeyService,
+                    windowPresenter: windowPresenter
+                )
+            }
         } label: {
             Label(preferences.appName, systemImage: "paintpalette.fill")
                 .background {

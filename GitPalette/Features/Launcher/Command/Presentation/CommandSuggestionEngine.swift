@@ -173,6 +173,16 @@ enum CommandSuggestionEngine {
                     ("template", L10n.text(.cmdArgFormatTemplate, language: language))
                 ]
             )
+        case .menubar:
+            return executeFilterArgumentCandidates(
+                command: command,
+                query: query,
+                argumentPrefix: parse.rawArgumentText,
+                candidates: [
+                    ("menu", L10n.text(.cmdArgMenubarMenu, language: language)),
+                    ("launcher", L10n.text(.cmdArgMenubarLauncher, language: language))
+                ]
+            )
         case .recent:
             return executeBuildRecentSuggestions(
                 query: query,

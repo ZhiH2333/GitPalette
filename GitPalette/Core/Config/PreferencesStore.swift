@@ -51,6 +51,10 @@ final class PreferencesStore: ObservableObject {
     @Published var descriptionLanguage: AppLanguage {
         didSet { executePersistDescriptionLanguage() }
     }
+    /// 菜单栏点击行为：下拉菜单 / 直接打开启动器。
+    @Published var menuBarClickBehavior: MenuBarClickBehavior {
+        didSet { executePersistMenuBarClickBehavior() }
+    }
 
     init(
         appName: String = "GitPalette",
@@ -73,6 +77,7 @@ final class PreferencesStore: ObservableObject {
             key: PreferencesKeys.descriptionLanguage,
             fallback: .systemDefault
         )
+        self.menuBarClickBehavior = Self.executeLoadMenuBarClickBehavior()
     }
 
     /// 按当前格式生成复制文本（code / description 遵循对应语言偏好）。
@@ -146,6 +151,20 @@ final class PreferencesStore: ObservableObject {
             descriptionLanguage.rawValue,
             forKey: PreferencesKeys.descriptionLanguage
         )
+    }
+
+    private func executePersistMenuBarClickBehavior() {
+        UserDefaults.standard.set(
+            menuBarClickBehavior.rawValue,
+            forKey: PreferencesKeys.menuBarClickBehavior
+        )
+    }
+
+    private static func executeLoadMenuBarClickBehavior() -> MenuBarClickBehavior {
+        guard let raw: String = UserDefaults.standard.string(forKey: PreferencesKeys.menuBarClickBehavior) else {
+            return .menu
+        }
+        return MenuBarClickBehavior(rawValue: raw) ?? .menu
     }
 
     private static func executeLoadCopyFormat() -> CopyFormat {

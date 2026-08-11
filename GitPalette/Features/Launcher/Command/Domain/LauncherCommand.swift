@@ -23,6 +23,7 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
     case recent
     case quit
     case hide
+    case menubar
     case help
 
     var id: String { rawValue }
@@ -46,6 +47,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             return ["exit"]
         case .help:
             return ["?", "commands"]
+        case .menubar:
+            return ["menuclick"]
         case .general, .about, .language, .codelang, .desclang,
                 .style, .format, .template, .recent, .hide:
             return []
@@ -84,6 +87,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             key = .cmdSummaryQuit
         case .hide:
             key = .cmdSummaryHide
+        case .menubar:
+            key = .cmdSummaryMenubar
         case .help:
             key = .cmdSummaryHelp
         }
@@ -107,6 +112,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             return "{emoji} {code} {name} {description}"
         case .recent:
             return "clear | count <n>"
+        case .menubar:
+            return "menu | launcher"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
             return nil
         }
@@ -128,6 +135,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             return "<template>"
         case .recent:
             return "<action>"
+        case .menubar:
+            return "<menu|launcher>"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
             return nil
         }

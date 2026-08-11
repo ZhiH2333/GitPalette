@@ -63,6 +63,10 @@ enum L10nKey: String, Sendable {
     case recentCount
     case itemCount
     case copied
+    case menuBarBehavior
+    case menuBarClickMenu
+    case menuBarClickLauncher
+    case menuBarBehaviorHint
     case hintWithRecent
     case hintListOnly
     case commandMode
@@ -123,6 +127,10 @@ enum L10nKey: String, Sendable {
     case cmdClearNoExtraArgs
     case cmdNeedCountValue
     case cmdCountMustBeInteger
+    case cmdSummaryMenubar
+    case cmdArgMenubarMenu
+    case cmdArgMenubarLauncher
+    case cmdUnsupportedMenubarArg
     case cmdUnsupportedSubcommand
     case cmdUnknownCommand
     case cmdIncompleteArguments
@@ -195,6 +203,10 @@ enum L10n {
         .recentCount: "Recent ",
         .itemCount: " items",
         .copied: "Copied",
+        .menuBarBehavior: "Menu bar click behavior",
+        .menuBarClickMenu: "Menu",
+        .menuBarClickLauncher: "Open Launcher",
+        .menuBarBehaviorHint: "\"Menu\" shows a dropdown with settings and other entries. \"Open Launcher\" opens the Spotlight-style search panel directly; use /settings, /about etc. to access other features.",
         .hintWithRecent: "↑↓←→ select · ⏎ copy",
         .hintListOnly: "↑↓ select · ⏎ copy",
         .commandMode: "Command mode",
@@ -225,6 +237,10 @@ enum L10n {
         .cmdSummaryRecent: "Recent: clear or count <5…20>",
         .cmdSummaryQuit: "Quit the app",
         .cmdSummaryHide: "Close the launcher",
+        .cmdSummaryMenubar: "Set menu bar click behavior (menu / launcher)",
+        .cmdArgMenubarMenu: "Dropdown menu with entries for settings, about, quit",
+        .cmdArgMenubarLauncher: "Open launcher directly; settings via /settings etc.",
+        .cmdUnsupportedMenubarArg: "Use menu or launcher",
         .cmdSummaryHelp: "List all commands",
         .cmdArgSettingsGeneral: "General settings",
         .cmdArgSettingsLanguage: "Language settings",
@@ -314,6 +330,10 @@ enum L10n {
         .recentCount: "最近 ",
         .itemCount: " 项",
         .copied: "已复制",
+        .menuBarBehavior: "菜单栏点击行为",
+        .menuBarClickMenu: "菜单",
+        .menuBarClickLauncher: "打开启动器",
+        .menuBarBehaviorHint: "「菜单」点击展开下拉菜单，含设置等入口。「打开启动器」直接打开 Spotlight 搜索面板，通过 /settings、/about 等命令访问其它功能。",
         .hintWithRecent: "↑↓←→ 选择 · ⏎ 复制",
         .hintListOnly: "↑↓ 选择 · ⏎ 复制",
         .commandMode: "命令模式",
@@ -344,6 +364,10 @@ enum L10n {
         .cmdSummaryRecent: "最近使用：clear 或 count <5…20>",
         .cmdSummaryQuit: "退出应用",
         .cmdSummaryHide: "关闭启动器面板",
+        .cmdSummaryMenubar: "设置菜单栏点击行为（菜单 / 打开启动器）",
+        .cmdArgMenubarMenu: "下拉菜单，含设置、关于、退出等入口",
+        .cmdArgMenubarLauncher: "直接打开启动器；设置等功能通过 /settings 等命令访问",
+        .cmdUnsupportedMenubarArg: "请使用 menu 或 launcher",
         .cmdSummaryHelp: "列出全部命令",
         .cmdArgSettingsGeneral: "通用设置",
         .cmdArgSettingsLanguage: "语言设置",
