@@ -68,7 +68,7 @@ struct MenuBarRuntimeBootstrap: View {
         )
     }
 
-    /// 启动热键；仅首次执行，避免 label 重建时重复弹启动器。
+    /// 启动热键；仅首次执行，避免 label 重建时重复注册。
     private func executeBootstrapIfNeeded() {
         guard !didBootstrap else {
             executeRegisterWindowHandlers()
@@ -80,18 +80,9 @@ struct MenuBarRuntimeBootstrap: View {
         }
         hotKeyService.executeRefreshStatus()
         executeCloseAccessibilityWindows()
-        if hotKeyService.isAccessibilityGranted {
-            executeOpenLauncher()
-            return
-        }
-        if hotKeyService.permissionGuideToken != nil {
+        if !hotKeyService.isAccessibilityGranted,
+           hotKeyService.permissionGuideToken != nil {
             executeOpenAccessibilityWindow()
-        }
-    }
-
-    private func executeOpenLauncher() {
-        DispatchQueue.main.async {
-            launcherController.present()
         }
     }
 

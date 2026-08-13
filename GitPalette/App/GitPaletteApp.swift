@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct GitPaletteApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var preferences: PreferencesStore
     @StateObject private var hotKeyService: HotKeyService
     @StateObject private var windowPresenter: AppWindowPresenter
@@ -32,6 +33,7 @@ struct GitPaletteApp: App {
             hotKeyService: hotKeyService,
             windowPresenter: windowPresenter
         )
+        appDelegate.executeAttach(launcherController: launcherController)
     }
 
     var body: some Scene {
