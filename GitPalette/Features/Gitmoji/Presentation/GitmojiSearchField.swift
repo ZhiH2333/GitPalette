@@ -19,6 +19,8 @@ struct GitmojiSearchField: NSViewRepresentable {
     let onCancel: () -> Void
     /// Tab / → 补全：传入当前文本，返回补全后文本；nil 表示无补全。
     let onRequestComplete: ((String) -> String?)?
+    /// git add 结果视图：拦截空格 / A，避免写入输入框。
+    let shouldConsumeGitAddKeys: Bool
 
     init(
         text: Binding<String>,
@@ -27,7 +29,8 @@ struct GitmojiSearchField: NSViewRepresentable {
         focusToken: UUID,
         onSubmit: @escaping () -> Void,
         onCancel: @escaping () -> Void,
-        onRequestComplete: ((String) -> String?)? = nil
+        onRequestComplete: ((String) -> String?)? = nil,
+        shouldConsumeGitAddKeys: Bool = false
     ) {
         self._text = text
         self.placeholder = placeholder
@@ -36,6 +39,7 @@ struct GitmojiSearchField: NSViewRepresentable {
         self.onSubmit = onSubmit
         self.onCancel = onCancel
         self.onRequestComplete = onRequestComplete
+        self.shouldConsumeGitAddKeys = shouldConsumeGitAddKeys
     }
 
     func makeNSView(context: Context) -> SpotlightSearchContainer {
@@ -63,6 +67,7 @@ struct GitmojiSearchField: NSViewRepresentable {
         context.coordinator.onSubmit = onSubmit
         context.coordinator.onCancel = onCancel
         context.coordinator.onRequestComplete = onRequestComplete
+        context.coordinator.shouldConsumeGitAddKeys = shouldConsumeGitAddKeys
         context.coordinator.ghostSuffix = ghostSuffix
         context.coordinator.executeSyncFocus(focusToken: focusToken, field: field)
         context.coordinator.executeEnsureFieldEditorTransparent(field: field)
@@ -112,6 +117,7 @@ struct GitmojiSearchField: NSViewRepresentable {
         var onSubmit: () -> Void
         var onCancel: () -> Void
         var onRequestComplete: ((String) -> String?)?
+        var shouldConsumeGitAddKeys: Bool = false
         var ghostSuffix: String = ""
         weak var container: SpotlightSearchContainer?
         private var lastFocusToken: UUID?
@@ -212,6 +218,22 @@ struct GitmojiSearchField: NSViewRepresentable {
                 }
             }
             return false
+        }
+
+        /// 拦截 git add 的空格 / A，不写入 field editor。
+        func control(
+            _ control: NSControl,
+            textView: NSTextView,
+            shouldChangeTextIn range: NSRange,
+            replacementString: String?
+        ) -> Bool {
+            guard shouldConsumeGitAddKeys, let replacementString else {
+                return true
+            }
+            if replacementString == " " || replacementString == "a" || replacementString == "A" {
+                return false
+            }
+            return true
         }
 
         /// 光标在末尾且存在 ghost 时采纳补全。

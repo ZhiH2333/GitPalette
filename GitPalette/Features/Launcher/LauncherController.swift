@@ -420,13 +420,13 @@ final class LauncherController {
             gitResult.executeSelectNext()
             return nil
         case 49:
-            if gitResult.isAddMode {
+            if gitResult.kind == .add {
                 gitResult.executeToggleHighlightedSelection()
                 return nil
             }
             return event
         case 0:
-            if gitResult.isAddMode {
+            if gitResult.kind == .add {
                 gitResult.executeSelectAll()
                 return nil
             }

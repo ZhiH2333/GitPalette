@@ -55,7 +55,8 @@ struct GitmojiListView: View {
                 focusToken: focusToken,
                 onSubmit: onConfirmCopy,
                 onCancel: onDismiss,
-                onRequestComplete: onRequestComplete
+                onRequestComplete: onRequestComplete,
+                shouldConsumeGitAddKeys: commandViewModel.gitResultViewModel?.kind == .add
             )
             .frame(maxWidth: .infinity, minHeight: 28, maxHeight: 28)
             if !viewModel.query.isEmpty {

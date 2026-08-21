@@ -154,11 +154,16 @@ final class LauncherCommandViewModel: ObservableObject {
     /// 同步 query 并刷新建议。
     func executeUpdateQuery(_ query: String) {
         if query != latestQuery {
-            gitResultViewModel = nil
+            if gitResultViewModel == nil || !query.hasPrefix("/git") {
+                gitResultViewModel = nil
+            }
         }
         latestQuery = query
         statusMessage = nil
         parseResult = LauncherCommandParser.executeParse(query, language: hintLanguage)
+        if gitResultViewModel != nil {
+            return
+        }
         guard parseResult.isCommandMode else {
             suggestions = []
             selectedIndex = 0
