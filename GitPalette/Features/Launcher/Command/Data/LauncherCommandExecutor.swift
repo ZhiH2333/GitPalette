@@ -213,9 +213,21 @@ final class LauncherCommandExecutor {
             return executePresentGitResult(kind: .status)
         case .add:
             return executePresentGitResult(kind: .add)
-        case .commit(let message):
-            return executePresentGitResult(kind: .commit, commitMessage: message)
+        case .commit:
+            return executePresentGitResult(kind: .commit, commitMessage: nil)
         }
+    }
+
+    /// 仅打开 commit 历史预览，不执行 git commit。
+    func executeMakeCommitLogViewModel() -> GitResultViewModel {
+        let viewModel: GitResultViewModel = GitResultViewModel(
+            kind: .commit,
+            store: gitRepositoryStore,
+            language: hintLanguage,
+            commitMessage: nil
+        )
+        viewModel.executeStart()
+        return viewModel
     }
 
     /// 链接仓库（路径或文件夹选择器）。

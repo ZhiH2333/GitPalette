@@ -166,6 +166,18 @@ final class LauncherController {
                 gitResult.executeStart()
                 return
             }
+            if gitResult.kind == .commit {
+                let argument: String = executeExtractGitArgument(from: viewModel.query)
+                let parsed: (subcommand: GitSubcommand?, isExecutable: Bool, message: String?) =
+                    GitSubcommand.executeParse(
+                        argument: argument,
+                        language: appConfig.descriptionLanguage
+                    )
+                if case .commit(let message)? = parsed.subcommand, !message.isEmpty {
+                    gitResult.executeConfirmCommit(message: message)
+                }
+                return
+            }
             return
         }
         let outcome: LauncherCommandExecutionOutcome =
@@ -180,6 +192,24 @@ final class LauncherController {
         case .presentingResult:
             executeRefreshHostingContent()
         }
+    }
+
+    /// 从完整 query 取出 /git 后的参数文本。
+    private func executeExtractGitArgument(from query: String) -> String {
+        let trimmed: String = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("/") else {
+            return ""
+        }
+        let body: String = String(trimmed.dropFirst())
+        guard let spaceIndex: String.Index = body.firstIndex(where: { $0.isWhitespace }) else {
+            return ""
+        }
+        let firstToken: String = String(body[..<spaceIndex])
+        guard firstToken.lowercased() == "git" else {
+            return ""
+        }
+        let after: String.Index = body.index(after: spaceIndex)
+        return String(body[after...]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Tab 补全命令。

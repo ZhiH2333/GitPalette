@@ -349,6 +349,9 @@ struct GitmojiListView: View {
             if commandViewModel.gitResultViewModel?.kind == .add {
                 return appConfig.t(.gitHintAdd)
             }
+            if commandViewModel.gitResultViewModel?.kind == .commit {
+                return appConfig.t(.gitHintCommit)
+            }
             return appConfig.t(.gitHintStatus)
         }
         if commandViewModel.suggestions.isEmpty {

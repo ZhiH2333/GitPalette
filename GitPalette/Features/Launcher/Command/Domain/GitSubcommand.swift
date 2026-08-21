@@ -93,6 +93,21 @@ enum GitSubcommand: Equatable, Sendable {
         }
     }
 
+    /// 查询是否已进入 /git commit（含后续消息）。
+    static func executeIsCommitQuery(_ query: String) -> Bool {
+        let trimmed: String = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("/") else {
+            return false
+        }
+        let afterSlash: String = String(trimmed.dropFirst())
+        let commandSplit: (head: String, rest: String) = executeSplitHead(afterSlash)
+        guard commandSplit.head.lowercased() == "git" else {
+            return false
+        }
+        let subcommandSplit: (head: String, rest: String) = executeSplitHead(commandSplit.rest)
+        return subcommandSplit.head.lowercased() == "commit"
+    }
+
     /// 拆分子命令 token 与剩余参数。
     private static func executeSplitHead(_ argument: String) -> (head: String, rest: String) {
         guard let spaceIndex: String.Index = argument.firstIndex(where: { $0.isWhitespace }) else {

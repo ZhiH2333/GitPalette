@@ -175,6 +175,8 @@ enum L10nKey: String, Sendable {
     case gitResultRunning
     case gitHintAdd
     case gitHintStatus
+    case gitHintCommit
+    case gitLogEmpty
     case gitFooterLinkedPrefix
     case gitFooterUnlinkHint
 }
@@ -331,7 +333,7 @@ enum L10n {
         .cmdArgGitUnlink: "Unlink a repository",
         .cmdArgGitStatus: "Show structured working tree status",
         .cmdArgGitAdd: "Select files graphically and git add",
-        .cmdArgGitCommit: "Create a local commit with a plain-text message",
+        .cmdArgGitCommit: "Plain-text local commit; history graph appears while typing",
         .gitStatusModified: "Modified",
         .gitStatusAdded: "Added",
         .gitStatusDeleted: "Deleted",
@@ -357,6 +359,8 @@ enum L10n {
         .gitResultRunning: "正在执行…",
         .gitHintAdd: "↑↓ move · Space toggle · A select all · ⏎ stage",
         .gitHintStatus: "↑↓ browse · working tree",
+        .gitHintCommit: "↑↓ browse commits · ⏎ commit",
+        .gitLogEmpty: "No commits yet",
         .gitFooterLinkedPrefix: "linked to ",
         .gitFooterUnlinkHint: "unlink"
     ]
@@ -501,7 +505,7 @@ enum L10n {
         .cmdArgGitUnlink: "移除已链接仓库",
         .cmdArgGitStatus: "展示结构化工作区状态",
         .cmdArgGitAdd: "图形化多选文件并 git add",
-        .cmdArgGitCommit: "使用纯文本消息创建本地提交",
+        .cmdArgGitCommit: "纯文本本地提交；输入时显示提交历史图",
         .gitStatusModified: "已修改",
         .gitStatusAdded: "新增",
         .gitStatusDeleted: "已删除",
@@ -527,6 +531,8 @@ enum L10n {
         .gitResultRunning: "正在执行…",
         .gitHintAdd: "↑↓ 移动 · Space 勾选 · A 全选 · ⏎ 暂存",
         .gitHintStatus: "↑↓ 浏览 · 工作区状态",
+        .gitHintCommit: "↑↓ 浏览提交 · ⏎ 提交",
+        .gitLogEmpty: "暂无提交历史",
         .gitFooterLinkedPrefix: "已链接 ",
         .gitFooterUnlinkHint: "unlink"
     ]

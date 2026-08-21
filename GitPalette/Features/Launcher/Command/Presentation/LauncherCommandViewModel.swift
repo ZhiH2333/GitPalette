@@ -153,9 +153,9 @@ final class LauncherCommandViewModel: ObservableObject {
 
     /// 同步 query 并刷新建议。
     func executeUpdateQuery(_ query: String) {
-        if query != latestQuery {
-            // 用户编辑了文本（add 模式下的空格 / A 已被输入框拦截，不会走到这里）：
-            // 退出结果视图，恢复命令建议，以便重新触发上下选择。
+        let isCommitQuery: Bool = GitSubcommand.executeIsCommitQuery(query)
+        let keepCommitLog: Bool = isCommitQuery && gitResultViewModel?.kind == .commit
+        if query != latestQuery && !keepCommitLog {
             gitResultViewModel = nil
         }
         latestQuery = query
@@ -171,6 +171,9 @@ final class LauncherCommandViewModel: ObservableObject {
         if shouldSkipNextSuggestionRefresh {
             shouldSkipNextSuggestionRefresh = false
             return
+        }
+        if isCommitQuery && gitResultViewModel == nil {
+            gitResultViewModel = executor.executeMakeCommitLogViewModel()
         }
         suggestions = CommandSuggestionEngine.resolveSuggestions(
             for: query,

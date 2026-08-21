@@ -22,8 +22,8 @@ struct GitResultPanelView: View {
             buildMessageState(systemImage: "exclamationmark.triangle", message: errorMessage)
         } else if viewModel.kind == .repos {
             buildReposList()
-        } else if viewModel.kind == .commit, let summary: String = viewModel.summaryText {
-            buildMessageState(systemImage: "checkmark.circle", message: summary)
+        } else if viewModel.kind == .commit {
+            buildCommitLogList()
         } else if viewModel.entries.isEmpty {
             buildMessageState(
                 systemImage: "checkmark.circle",
@@ -90,6 +90,48 @@ struct GitResultPanelView: View {
         }
     }
 
+    /// 提交历史图。
+    @ViewBuilder
+    private func buildCommitLogList() -> some View {
+        if viewModel.logEntries.isEmpty {
+            buildMessageState(
+                systemImage: "checkmark.circle",
+                message: resolveCommitEmptyMessage()
+            )
+        } else {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 2) {
+                        if let summary: String = viewModel.summaryText, !summary.isEmpty {
+                            Text(summary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                        }
+                        ForEach(Array(viewModel.logEntries.enumerated()), id: \.element.id) { index, entry in
+                            GitLogRowView(
+                                entry: entry,
+                                isSelected: index == viewModel.highlightedIndex
+                            )
+                            .id(entry.id)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewModel.executeActivateRow(at: index)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, LauncherChrome.listHorizontalPadding)
+                    .padding(.vertical, 6)
+                }
+                .onChangeCompat(of: viewModel.highlightedIndex) { newValue in
+                    executeScrollToLogEntry(proxy: proxy, index: newValue)
+                }
+            }
+        }
+    }
+
     /// 已链接仓库列表。
     @ViewBuilder
     private func buildReposList() -> some View {
@@ -135,9 +177,28 @@ struct GitResultPanelView: View {
         }
     }
 
+    /// 无提交列表时的空态文案。
+    private func resolveCommitEmptyMessage() -> String {
+        if let errorMessage: String = viewModel.errorMessage, !errorMessage.isEmpty {
+            return errorMessage
+        }
+        return viewModel.summaryText ?? L10n.text(.gitLogEmpty, language: language)
+    }
+
     /// 滚到高亮行。
     private func executeScrollToEntry(proxy: ScrollViewProxy, index: Int) {
         let items: [GitStatusEntry] = viewModel.entries
+        guard items.indices.contains(index) else {
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.12)) {
+            proxy.scrollTo(items[index].id, anchor: .center)
+        }
+    }
+
+    /// 滚到高亮提交行。
+    private func executeScrollToLogEntry(proxy: ScrollViewProxy, index: Int) {
+        let items: [GitLogEntry] = viewModel.logEntries
         guard items.indices.contains(index) else {
             return
         }

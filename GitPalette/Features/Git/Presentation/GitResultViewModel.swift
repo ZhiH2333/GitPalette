@@ -32,6 +32,8 @@ final class GitResultViewModel: ObservableObject {
     @Published private(set) var phase: GitResultPhase = .running
     /// 结构化改动
     @Published private(set) var entries: [GitStatusEntry] = []
+    /// commit 历史图行
+    @Published private(set) var logEntries: [GitLogEntry] = []
     /// add 模式下的选中路径
     @Published private(set) var selectedPaths: Set<String> = []
     /// 当前高亮行
@@ -79,7 +81,7 @@ final class GitResultViewModel: ObservableObject {
         case .add:
             Task { await executeLoadStatus() }
         case .commit:
-            Task { await executeCommit() }
+            Task { await executeLoadLog() }
         case .repos:
             executeLoadRepos()
         }
@@ -87,6 +89,13 @@ final class GitResultViewModel: ObservableObject {
 
     /// ↑ 高亮上一行。
     func executeSelectPrevious() {
+        if kind == .commit {
+            guard !logEntries.isEmpty else {
+                return
+            }
+            highlightedIndex = max(highlightedIndex - 1, 0)
+            return
+        }
         guard !entries.isEmpty else {
             return
         }
@@ -95,6 +104,13 @@ final class GitResultViewModel: ObservableObject {
 
     /// ↓ 高亮下一行。
     func executeSelectNext() {
+        if kind == .commit {
+            guard !logEntries.isEmpty else {
+                return
+            }
+            highlightedIndex = min(highlightedIndex + 1, logEntries.count - 1)
+            return
+        }
         guard !entries.isEmpty else {
             return
         }
@@ -124,6 +140,13 @@ final class GitResultViewModel: ObservableObject {
 
     /// 点击行：高亮；add 模式下同时切换选中。
     func executeActivateRow(at index: Int) {
+        if kind == .commit {
+            guard logEntries.indices.contains(index) else {
+                return
+            }
+            highlightedIndex = index
+            return
+        }
         guard entries.indices.contains(index) else {
             return
         }
@@ -136,6 +159,12 @@ final class GitResultViewModel: ObservableObject {
             return
         }
         Task { await executeStageSelected() }
+    }
+
+    /// Return：用当前消息本地提交并刷新历史树。
+    func executeConfirmCommit(message: String) {
+        commitMessage = message
+        Task { await executeCommitThenReloadLog() }
     }
 
     /// 加载工作区状态。
@@ -160,6 +189,36 @@ final class GitResultViewModel: ObservableObject {
             }
             if entries.isEmpty {
                 summaryText = L10n.text(.gitWorkingTreeClean, language: language)
+            }
+            phase = .completed
+        } catch let error as GitCommandError {
+            phase = .failed
+            errorMessage = error.localizedMessage(language: language)
+        } catch {
+            phase = .failed
+            errorMessage = GitCommandError.processLaunchFailed(error.localizedDescription)
+                .localizedMessage(language: language)
+        }
+    }
+
+    /// 加载提交历史图。
+    private func executeLoadLog() async {
+        phase = .running
+        errorMessage = nil
+        do {
+            let repository: GitRepository = try store.resolveActiveRepository()
+            activeRepository = repository
+            let result: GitProcessResult = try await GitProcessRunner.executeRun(
+                repositoryPath: repository.path,
+                arguments: ["log", "--graph", "--all", "--decorate", "--oneline", "--date-order", "-n", "80"]
+            )
+            if result.exitCode != 0 {
+                throw GitCommandError.nonZeroExit(exitCode: result.exitCode, stderr: result.stderr)
+            }
+            logEntries = GitLogParser.executeParse(result.stdout)
+            highlightedIndex = 0
+            if logEntries.isEmpty && summaryText == nil {
+                summaryText = L10n.text(.gitLogEmpty, language: language)
             }
             phase = .completed
         } catch let error as GitCommandError {
@@ -210,11 +269,10 @@ final class GitResultViewModel: ObservableObject {
         }
     }
 
-    /// 仅本地 commit。
-    private func executeCommit() async {
+    /// 仅本地 commit，成功后刷新历史树。
+    private func executeCommitThenReloadLog() async {
         phase = .running
         errorMessage = nil
-        summaryText = nil
         let message: String = commitMessage ?? ""
         do {
             let repository: GitRepository = try store.resolveActiveRepository()
@@ -229,7 +287,9 @@ final class GitResultViewModel: ObservableObject {
             let statusEntries: [GitStatusEntry] = GitStatusParser.executeParse(statusResult.stdout)
             let stagedCount: Int = statusEntries.filter(\.isStaged).count
             if stagedCount == 0 {
-                throw GitCommandError.noStagedChanges
+                summaryText = GitCommandError.noStagedChanges.localizedMessage(language: language)
+                phase = .completed
+                return
             }
             let commitResult: GitProcessResult = try await GitProcessRunner.executeRun(
                 repositoryPath: repository.path,
@@ -247,8 +307,7 @@ final class GitResultViewModel: ObservableObject {
                 + "\(stagedCount)"
                 + L10n.text(.gitCommitFileCountSuffix, language: language)
                 + hash
-            entries = []
-            phase = .completed
+            await executeLoadLog()
         } catch let error as GitCommandError {
             phase = .failed
             errorMessage = error.localizedMessage(language: language)

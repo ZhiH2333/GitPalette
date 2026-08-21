@@ -240,6 +240,9 @@ enum CommandSuggestionEngine {
                 linkedRepositories: linkedRepositories
             )
         }
+        if head == "commit" {
+            return []
+        }
         let candidates: [(value: String, summary: String)] = [
             ("link", L10n.text(.cmdArgGitLink, language: language)),
             ("repos", L10n.text(.cmdArgGitRepos, language: language)),
