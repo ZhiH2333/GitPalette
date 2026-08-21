@@ -333,8 +333,12 @@ struct GitmojiListView: View {
         .padding(.vertical, LauncherChrome.footerVerticalPadding)
     }
 
-    /// 命令模式底部状态（跟随 UI 语言）：「命令模式 15 条建议」。
+    /// 命令模式底部状态：已链接显示仓库名；未链接保留「命令模式 N 条建议 (unlink)」。
     private func resolveCommandFooterStatusText() -> String {
+        if let repositoryName: String = commandViewModel.resolveActiveLinkedRepositoryName() {
+            return appConfig.t(.gitFooterLinkedPrefix) + repositoryName
+        }
+        let unlinkSuffix: String = " (" + appConfig.t(.gitFooterUnlinkHint) + ")"
         if commandViewModel.gitResultViewModel != nil {
             if commandViewModel.gitResultViewModel?.kind == .add {
                 return appConfig.t(.gitHintAdd)
@@ -342,9 +346,10 @@ struct GitmojiListView: View {
             return appConfig.t(.gitHintStatus)
         }
         if commandViewModel.suggestions.isEmpty {
-            return "\(appConfig.t(.commandMode)) · \(appConfig.t(.cmdNoMatch))"
+            return "\(appConfig.t(.commandMode)) · \(appConfig.t(.cmdNoMatch))" + unlinkSuffix
         }
         return "\(appConfig.t(.commandMode)) \(commandViewModel.suggestions.count)\(appConfig.t(.suggestionCount))"
+            + unlinkSuffix
     }
 
     /// 底部计数文案。

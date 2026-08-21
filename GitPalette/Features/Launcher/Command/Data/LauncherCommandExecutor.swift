@@ -37,6 +37,11 @@ final class LauncherCommandExecutor {
         gitRepositoryStore.loadRepositories()
     }
 
+    /// 当前活跃仓库；未链接或路径失效时为 nil。
+    func resolveActiveLinkedRepository() -> GitRepository? {
+        try? gitRepositoryStore.resolveActiveRepository()
+    }
+
     init(
         preferences: PreferencesStore,
         windowPresenter: AppWindowPresenter,

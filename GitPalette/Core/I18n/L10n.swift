@@ -175,6 +175,8 @@ enum L10nKey: String, Sendable {
     case gitResultRunning
     case gitHintAdd
     case gitHintStatus
+    case gitFooterLinkedPrefix
+    case gitFooterUnlinkHint
 }
 
 /// 界面文案表。
@@ -353,8 +355,10 @@ enum L10n {
         .gitUnlinkNeedsUse: "当前没有活跃仓库，请执行 /git use 或 /git link",
         .gitReposActiveMark: "当前",
         .gitResultRunning: "正在执行…",
-        .gitHintAdd: "↑↓ 移动 · Space 勾选 · A 全选 · ⏎ 暂存",
-        .gitHintStatus: "↑↓ 浏览 · 工作区状态"
+        .gitHintAdd: "↑↓ move · Space toggle · A select all · ⏎ stage",
+        .gitHintStatus: "↑↓ browse · working tree",
+        .gitFooterLinkedPrefix: "linked to ",
+        .gitFooterUnlinkHint: "unlink"
     ]
 
     private static let simplifiedChinese: [L10nKey: String] = [
@@ -522,7 +526,9 @@ enum L10n {
         .gitReposActiveMark: "当前",
         .gitResultRunning: "正在执行…",
         .gitHintAdd: "↑↓ 移动 · Space 勾选 · A 全选 · ⏎ 暂存",
-        .gitHintStatus: "↑↓ 浏览 · 工作区状态"
+        .gitHintStatus: "↑↓ 浏览 · 工作区状态",
+        .gitFooterLinkedPrefix: "已链接 ",
+        .gitFooterUnlinkHint: "unlink"
     ]
 }
 

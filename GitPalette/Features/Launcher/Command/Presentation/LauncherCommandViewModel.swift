@@ -292,6 +292,11 @@ final class LauncherCommandViewModel: ObservableObject {
         gitResultViewModel != nil
     }
 
+    /// 当前活跃仓库展示名；未链接时为 nil。
+    func resolveActiveLinkedRepositoryName() -> String? {
+        executor.resolveActiveLinkedRepository()?.displayName
+    }
+
     /// 点击建议行：可执行则执行，否则应用补全文本。
     func executeActivateSuggestion(
         at index: Int,
