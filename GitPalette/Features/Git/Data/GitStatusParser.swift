@@ -33,12 +33,12 @@ enum GitStatusParser {
         }
         let kind: GitStatusKind = resolveKind(xy: xy)
         let isStaged: Bool = executeIsStaged(xy: xy)
-        if kind == .renamed {
+        if kind == .renamed || kind == .copied {
             let parts: (original: String, current: String)? = executeSplitRename(rest)
             if let parts {
                 return GitStatusEntry(
                     relativePath: parts.current,
-                    kind: .renamed,
+                    kind: kind,
                     isStaged: isStaged,
                     originalPath: parts.original
                 )
@@ -59,8 +59,14 @@ enum GitStatusParser {
         }
         let x: Character = xy.first ?? " "
         let y: Character = xy.count > 1 ? xy[xy.index(after: xy.startIndex)] : " "
-        if x == "R" || y == "R" || x == "C" || y == "C" {
+        if x == "U" || y == "U" || xy == "AA" || xy == "DD" {
+            return .conflicted
+        }
+        if x == "R" || y == "R" {
             return .renamed
+        }
+        if x == "C" || y == "C" {
+            return .copied
         }
         if x == "D" || y == "D" {
             return .deleted
@@ -96,17 +102,63 @@ enum GitStatusParser {
         return (original, current)
     }
 
-    /// 去掉 porcelain 引号转义。
+    /// 去掉 porcelain 引号与 C 风格转义（含八进制）。
     private static func executeUnquotePath(_ raw: String) -> String {
         var path: String = raw.trimmingCharacters(in: .whitespaces)
         guard path.count >= 2, path.hasPrefix("\""), path.hasSuffix("\"") else {
             return path
         }
         path = String(path.dropFirst().dropLast())
-        path = path.replacingOccurrences(of: "\\\"", with: "\"")
-        path = path.replacingOccurrences(of: "\\\\", with: "\\")
-        path = path.replacingOccurrences(of: "\\t", with: "\t")
-        path = path.replacingOccurrences(of: "\\n", with: "\n")
-        return path
+        var bytes: Data = Data()
+        var index: String.Index = path.startIndex
+        while index < path.endIndex {
+            let character: Character = path[index]
+            if character != "\\" {
+                bytes.append(contentsOf: String(character).utf8)
+                index = path.index(after: index)
+                continue
+            }
+            let nextIndex: String.Index = path.index(after: index)
+            if nextIndex >= path.endIndex {
+                bytes.append(contentsOf: String(character).utf8)
+                break
+            }
+            let next: Character = path[nextIndex]
+            switch next {
+            case "\"":
+                bytes.append(0x22)
+                index = path.index(after: nextIndex)
+            case "\\":
+                bytes.append(0x5C)
+                index = path.index(after: nextIndex)
+            case "t":
+                bytes.append(0x09)
+                index = path.index(after: nextIndex)
+            case "n":
+                bytes.append(0x0A)
+                index = path.index(after: nextIndex)
+            case "0", "1", "2", "3", "4", "5", "6", "7":
+                var octal: String = String(next)
+                var cursor: String.Index = path.index(after: nextIndex)
+                var count: Int = 1
+                while count < 3, cursor < path.endIndex {
+                    let digit: Character = path[cursor]
+                    guard ("0"..."7").contains(digit) else {
+                        break
+                    }
+                    octal.append(digit)
+                    cursor = path.index(after: cursor)
+                    count += 1
+                }
+                if let value: UInt8 = UInt8(octal, radix: 8) {
+                    bytes.append(value)
+                }
+                index = cursor
+            default:
+                bytes.append(contentsOf: String(next).utf8)
+                index = path.index(after: nextIndex)
+            }
+        }
+        return String(data: bytes, encoding: .utf8) ?? path
     }
 }

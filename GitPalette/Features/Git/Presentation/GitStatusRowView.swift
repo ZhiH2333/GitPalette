@@ -70,6 +70,10 @@ struct GitStatusRowView: View {
             return .secondary
         case .renamed:
             return .blue
+        case .conflicted:
+            return .red
+        case .copied:
+            return .blue
         }
     }
 }

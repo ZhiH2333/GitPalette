@@ -12,12 +12,18 @@
 
 /* Begin PBXFileReference section */
 		20EC3C5E3024512F00DEF2D4 /* GitPalette.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GitPalette.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20EC3C703024513000TEST01 /* GitPaletteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GitPaletteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		20EC3C603024512F00DEF2D4 /* GitPalette */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GitPalette;
+			sourceTree = "<group>";
+		};
+		20EC3C703024513000TEST02 /* GitPaletteTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GitPaletteTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +37,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		20EC3C703024513000TEST05 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -38,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				20EC3C603024512F00DEF2D4 /* GitPalette */,
+				20EC3C703024513000TEST02 /* GitPaletteTests */,
 				20EC3C5F3024512F00DEF2D4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				20EC3C5E3024512F00DEF2D4 /* GitPalette.app */,
+				20EC3C703024513000TEST01 /* GitPaletteTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +91,27 @@
 			productReference = 20EC3C5E3024512F00DEF2D4 /* GitPalette.app */;
 			productType = "com.apple.product-type.application";
 		};
+		20EC3C703024513000TEST03 /* GitPaletteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 20EC3C703024513000TEST09 /* Build configuration list for PBXNativeTarget "GitPaletteTests" */;
+			buildPhases = (
+				20EC3C703024513000TEST04 /* Sources */,
+				20EC3C703024513000TEST05 /* Frameworks */,
+				20EC3C703024513000TEST06 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				20EC3C703024513000TEST0A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				20EC3C703024513000TEST02 /* GitPaletteTests */,
+			);
+			name = GitPaletteTests;
+			productName = GitPaletteTests;
+			productReference = 20EC3C703024513000TEST01 /* GitPaletteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -87,6 +123,9 @@
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					20EC3C5D3024512F00DEF2D4 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					20EC3C703024513000TEST03 = {
 						CreatedOnToolsVersion = 26.6;
 					};
 				};
@@ -109,12 +148,20 @@
 			projectRoot = "";
 			targets = (
 				20EC3C5D3024512F00DEF2D4 /* GitPalette */,
+				20EC3C703024513000TEST03 /* GitPaletteTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		20EC3C5C3024512F00DEF2D4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		20EC3C703024513000TEST06 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -131,7 +178,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		20EC3C703024513000TEST04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+
+/* Begin PBXContainerItemProxy section */
+		20EC3C703024513000TEST0B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 20EC3C563024512F00DEF2D4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 20EC3C5D3024512F00DEF2D4;
+			remoteInfo = GitPalette;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		20EC3C703024513000TEST0A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 20EC3C5D3024512F00DEF2D4 /* GitPalette */;
+			targetProxy = 20EC3C703024513000TEST0B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		20EC3C673024513000DEF2D4 /* Debug */ = {
@@ -171,6 +244,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -316,6 +390,57 @@
 			};
 			name = Release;
 		};
+
+		20EC3C703024513000TEST07 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zh.GitPalette.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GitPalette.app/Contents/MacOS/GitPalette";
+			};
+			name = Debug;
+		};
+		20EC3C703024513000TEST08 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zh.GitPalette.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GitPalette.app/Contents/MacOS/GitPalette";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -333,6 +458,16 @@
 			buildConfigurations = (
 				20EC3C6A3024513000DEF2D4 /* Debug */,
 				20EC3C6B3024513000DEF2D4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+
+		20EC3C703024513000TEST09 /* Build configuration list for PBXNativeTarget "GitPaletteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				20EC3C703024513000TEST07 /* Debug */,
+				20EC3C703024513000TEST08 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

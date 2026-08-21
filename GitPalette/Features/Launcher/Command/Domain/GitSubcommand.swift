@@ -84,6 +84,7 @@ enum GitSubcommand: Equatable, Sendable {
             return (nil, false, L10n.text(.cmdGitAddNoExtraArgs, language: language))
         case "commit":
             let message: String = executeUnquote(split.rest)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             if message.isEmpty {
                 return (nil, false, L10n.text(.cmdNeedGitCommitMessage, language: language))
             }

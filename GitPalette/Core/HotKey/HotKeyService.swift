@@ -149,7 +149,12 @@ final class HotKeyService: ObservableObject {
             return
         }
         if shortcut.isTakenBySystem {
-            conflictHint = "当前热键 \(hotkeyDisplayText) 可能与系统快捷键冲突。请到「系统设置 → 键盘 → 键盘快捷键」中调整，或于后续版本更改 GitPalette 热键。"
+            let stored: String? = UserDefaults.standard.string(forKey: PreferencesKeys.uiLanguage)
+            let language: AppLanguage = stored.flatMap(AppLanguage.init(rawValue:)) ?? .systemDefault
+            conflictHint = String(
+                format: L10n.text(.hotkeyConflictHint, language: language),
+                hotkeyDisplayText
+            )
         } else {
             conflictHint = nil
         }

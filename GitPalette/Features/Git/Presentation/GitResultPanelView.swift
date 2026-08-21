@@ -143,7 +143,7 @@ struct GitResultPanelView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 2) {
-                    ForEach(viewModel.repositories) { repository in
+                    ForEach(Array(viewModel.repositories.enumerated()), id: \.element.id) { index, repository in
                         HStack(spacing: 14) {
                             Image(systemName: CommandSuggestion.resolveGitSubcommandSystemImageName("repos"))
                                 .font(.body.weight(.medium))
@@ -169,6 +169,16 @@ struct GitResultPanelView: View {
                         }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 10)
+                        .background(
+                            index == viewModel.highlightedIndex
+                                ? Color.accentColor.opacity(0.22)
+                                : Color.clear,
+                            in: RoundedRectangle(cornerRadius: LauncherChrome.rowCornerRadius, style: .continuous)
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.executeActivateRow(at: index)
+                        }
                     }
                 }
                 .padding(.horizontal, LauncherChrome.listHorizontalPadding)

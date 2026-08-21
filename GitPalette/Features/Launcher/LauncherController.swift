@@ -166,6 +166,10 @@ final class LauncherController {
                 gitResult.executeStart()
                 return
             }
+            if gitResult.kind == .repos {
+                gitResult.executeConfirmRepos()
+                return
+            }
             if gitResult.kind == .commit {
                 let argument: String = executeExtractGitArgument(from: viewModel.query)
                 let parsed: (subcommand: GitSubcommand?, isExecutable: Bool, message: String?) =

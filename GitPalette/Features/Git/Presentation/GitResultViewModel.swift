@@ -96,6 +96,13 @@ final class GitResultViewModel: ObservableObject {
             highlightedIndex = max(highlightedIndex - 1, 0)
             return
         }
+        if kind == .repos {
+            guard !repositories.isEmpty else {
+                return
+            }
+            highlightedIndex = max(highlightedIndex - 1, 0)
+            return
+        }
         guard !entries.isEmpty else {
             return
         }
@@ -109,6 +116,13 @@ final class GitResultViewModel: ObservableObject {
                 return
             }
             highlightedIndex = min(highlightedIndex + 1, logEntries.count - 1)
+            return
+        }
+        if kind == .repos {
+            guard !repositories.isEmpty else {
+                return
+            }
+            highlightedIndex = min(highlightedIndex + 1, repositories.count - 1)
             return
         }
         guard !entries.isEmpty else {
@@ -147,10 +161,40 @@ final class GitResultViewModel: ObservableObject {
             highlightedIndex = index
             return
         }
+        if kind == .repos {
+            guard repositories.indices.contains(index) else {
+                return
+            }
+            highlightedIndex = index
+            return
+        }
         guard entries.indices.contains(index) else {
             return
         }
         highlightedIndex = index
+    }
+
+    /// Return：将高亮仓库设为当前仓库。
+    func executeConfirmRepos() {
+        guard kind == .repos, phase == .completed else {
+            return
+        }
+        guard repositories.indices.contains(highlightedIndex) else {
+            return
+        }
+        let selected: GitRepository = repositories[highlightedIndex]
+        do {
+            let repository: GitRepository = try store.executeUse(name: selected.displayName)
+            activeRepositoryID = repository.id
+            summaryText = L10n.text(.gitUseSucceeded, language: language) + repository.displayName
+        } catch let error as GitCommandError {
+            errorMessage = error.localizedMessage(language: language)
+            phase = .failed
+        } catch {
+            errorMessage = GitCommandError.processLaunchFailed(error.localizedDescription)
+                .localizedMessage(language: language)
+            phase = .failed
+        }
     }
 
     /// Return：对选中路径 git add 后刷新 status。
@@ -333,8 +377,14 @@ final class GitResultViewModel: ObservableObject {
         do {
             let active: GitRepository = try store.resolveActiveRepository()
             activeRepositoryID = active.id
+            if let index: Int = loaded.firstIndex(where: { $0.id == active.id }) {
+                highlightedIndex = index
+            } else {
+                highlightedIndex = 0
+            }
         } catch {
             activeRepositoryID = nil
+            highlightedIndex = 0
         }
         summaryText = nil
         phase = .completed

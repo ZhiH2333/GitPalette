@@ -213,8 +213,8 @@ final class LauncherCommandExecutor {
             return executePresentGitResult(kind: .status)
         case .add:
             return executePresentGitResult(kind: .add)
-        case .commit:
-            return executePresentGitResult(kind: .commit, commitMessage: nil)
+        case .commit(let message):
+            return executePresentGitResult(kind: .commit, commitMessage: message)
         }
     }
 
@@ -322,7 +322,11 @@ final class LauncherCommandExecutor {
             language: hintLanguage,
             commitMessage: commitMessage
         )
-        viewModel.executeStart()
+        if kind == .commit, let commitMessage, !commitMessage.isEmpty {
+            viewModel.executeConfirmCommit(message: commitMessage)
+        } else {
+            viewModel.executeStart()
+        }
         return .presentingResult(viewModel)
     }
 }

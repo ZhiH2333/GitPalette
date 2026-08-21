@@ -14,6 +14,8 @@ enum GitStatusKind: String, Equatable, Sendable {
     case deleted
     case untracked
     case renamed
+    case conflicted
+    case copied
 
     /// porcelain 风格短标记。
     var porcelainMark: String {
@@ -28,23 +30,30 @@ enum GitStatusKind: String, Equatable, Sendable {
             return "??"
         case .renamed:
             return "R"
+        case .conflicted:
+            return "UU"
+        case .copied:
+            return "C"
         }
     }
 
     /// 状态名（跟随描述语言）。
     func displayName(language: AppLanguage) -> String {
-        let isChinese: Bool = language == .simplifiedChinese
         switch self {
         case .modified:
-            return isChinese ? "已修改" : "Modified"
+            return L10n.text(.gitStatusModified, language: language)
         case .added:
-            return isChinese ? "新增" : "Added"
+            return L10n.text(.gitStatusAdded, language: language)
         case .deleted:
-            return isChinese ? "已删除" : "Deleted"
+            return L10n.text(.gitStatusDeleted, language: language)
         case .untracked:
-            return isChinese ? "未跟踪" : "Untracked"
+            return L10n.text(.gitStatusUntracked, language: language)
         case .renamed:
-            return isChinese ? "已重命名" : "Renamed"
+            return L10n.text(.gitStatusRenamed, language: language)
+        case .conflicted:
+            return L10n.text(.gitStatusConflicted, language: language)
+        case .copied:
+            return L10n.text(.gitStatusCopied, language: language)
         }
     }
 }
