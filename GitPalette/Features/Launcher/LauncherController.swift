@@ -419,19 +419,10 @@ final class LauncherController {
         case 125:
             gitResult.executeSelectNext()
             return nil
-        case 49:
-            if gitResult.kind == .add {
-                gitResult.executeToggleHighlightedSelection()
-                return nil
-            }
-            return event
-        case 0:
-            if gitResult.kind == .add {
-                gitResult.executeSelectAll()
-                return nil
-            }
-            return event
         default:
+            // Space / A 在 git add 模式下由 GitmojiSearchField 的
+            // controlTextDidChange 拦截并转为勾选 / 全选（详见该文件注释），
+            // 这里不再重复处理，避免 delegate 链路与本地监视双重触发。
             return event
         }
     }

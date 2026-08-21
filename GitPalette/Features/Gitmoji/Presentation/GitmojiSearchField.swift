@@ -19,8 +19,12 @@ struct GitmojiSearchField: NSViewRepresentable {
     let onCancel: () -> Void
     /// Tab / → 补全：传入当前文本，返回补全后文本；nil 表示无补全。
     let onRequestComplete: ((String) -> String?)?
-    /// git add 结果视图：拦截空格 / A，避免写入输入框。
+    /// git add 结果视图：拦截空格 / A，不写入输入框，转为切换勾选 / 全选。
     let shouldConsumeGitAddKeys: Bool
+    /// 空格被拦截时触发：切换当前高亮行勾选。
+    let onGitAddToggleHighlighted: (() -> Void)?
+    /// A 被拦截时触发：全选。
+    let onGitAddSelectAll: (() -> Void)?
 
     init(
         text: Binding<String>,
@@ -30,7 +34,9 @@ struct GitmojiSearchField: NSViewRepresentable {
         onSubmit: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         onRequestComplete: ((String) -> String?)? = nil,
-        shouldConsumeGitAddKeys: Bool = false
+        shouldConsumeGitAddKeys: Bool = false,
+        onGitAddToggleHighlighted: (() -> Void)? = nil,
+        onGitAddSelectAll: (() -> Void)? = nil
     ) {
         self._text = text
         self.placeholder = placeholder
@@ -40,6 +46,8 @@ struct GitmojiSearchField: NSViewRepresentable {
         self.onCancel = onCancel
         self.onRequestComplete = onRequestComplete
         self.shouldConsumeGitAddKeys = shouldConsumeGitAddKeys
+        self.onGitAddToggleHighlighted = onGitAddToggleHighlighted
+        self.onGitAddSelectAll = onGitAddSelectAll
     }
 
     func makeNSView(context: Context) -> SpotlightSearchContainer {
@@ -68,6 +76,8 @@ struct GitmojiSearchField: NSViewRepresentable {
         context.coordinator.onCancel = onCancel
         context.coordinator.onRequestComplete = onRequestComplete
         context.coordinator.shouldConsumeGitAddKeys = shouldConsumeGitAddKeys
+        context.coordinator.onGitAddToggleHighlighted = onGitAddToggleHighlighted
+        context.coordinator.onGitAddSelectAll = onGitAddSelectAll
         context.coordinator.ghostSuffix = ghostSuffix
         context.coordinator.executeSyncFocus(focusToken: focusToken, field: field)
         context.coordinator.executeEnsureFieldEditorTransparent(field: field)
@@ -112,12 +122,20 @@ struct GitmojiSearchField: NSViewRepresentable {
     }
 
     /// 承接 NSTextFieldDelegate，桥接文本与 Esc/Return/Tab/→。
+    /// 注意：不要把 field editor 的 delegate 直接替换成本对象——NSTextField 依赖自己
+    /// 是 field editor 的 delegate 才能把文本变化转发成 controlTextDidChange /
+    /// NSControlTextDidChangeNotification；替换后 SwiftUI 的 text 绑定会彻底失效
+    /// （输入框视觉上能打字，但 query 绑定永远不更新，命令模式随之整体失效）。
+    /// 因此 git add 的空格 / A 拦截改为：让输入正常发生，controlTextDidChange 里
+    /// 检测出「刚插入了单个空格 / a / A」时撤回文本并改为触发勾选 / 全选回调。
     final class Coordinator: NSObject, NSTextFieldDelegate {
         private let text: Binding<String>
         var onSubmit: () -> Void
         var onCancel: () -> Void
         var onRequestComplete: ((String) -> String?)?
         var shouldConsumeGitAddKeys: Bool = false
+        var onGitAddToggleHighlighted: (() -> Void)?
+        var onGitAddSelectAll: (() -> Void)?
         var ghostSuffix: String = ""
         weak var container: SpotlightSearchContainer?
         private var lastFocusToken: UUID?
@@ -138,7 +156,22 @@ struct GitmojiSearchField: NSViewRepresentable {
             guard let field: NSTextField = obj.object as? NSTextField else {
                 return
             }
-            text.wrappedValue = field.stringValue
+            let newValue: String = field.stringValue
+            let oldValue: String = text.wrappedValue
+            if shouldConsumeGitAddKeys,
+               let insertedChar: Character = Self.executeDetectSingleInsertedChar(old: oldValue, new: newValue) {
+                if insertedChar == " " {
+                    executeRevertFieldText(field: field, to: oldValue)
+                    onGitAddToggleHighlighted?()
+                    return
+                }
+                if insertedChar == "a" || insertedChar == "A" {
+                    executeRevertFieldText(field: field, to: oldValue)
+                    onGitAddSelectAll?()
+                    return
+                }
+            }
+            text.wrappedValue = newValue
             if let container {
                 container.executeUpdateGhost(
                     suffix: ghostSuffix,
@@ -173,6 +206,44 @@ struct GitmojiSearchField: NSViewRepresentable {
             }
             editor.drawsBackground = false
             editor.backgroundColor = .clear
+        }
+
+        /// 把字段文本 + field editor 一并撤回到给定值，光标放末尾。
+        private func executeRevertFieldText(field: NSTextField, to value: String) {
+            field.stringValue = value
+            let length: Int = (value as NSString).length
+            let endRange: NSRange = NSRange(location: length, length: 0)
+            if let editor: NSTextView = field.currentEditor() as? NSTextView {
+                if editor.string != value {
+                    editor.string = value
+                }
+                editor.setSelectedRange(endRange)
+            }
+        }
+
+        /// 若 new 相对 old 恰好多了一个字符（任意位置插入），返回该字符；否则 nil。
+        private static func executeDetectSingleInsertedChar(old: String, new: String) -> Character? {
+            guard new.count == old.count + 1 else {
+                return nil
+            }
+            let oldChars: [Character] = Array(old)
+            let newChars: [Character] = Array(new)
+            var prefixLength: Int = 0
+            while prefixLength < oldChars.count,
+                  prefixLength < newChars.count,
+                  oldChars[prefixLength] == newChars[prefixLength] {
+                prefixLength += 1
+            }
+            guard prefixLength < newChars.count else {
+                return nil
+            }
+            let inserted: Character = newChars[prefixLength]
+            let remainderOld: [Character] = Array(oldChars[prefixLength...])
+            let remainderNew: [Character] = Array(newChars[(prefixLength + 1)...])
+            guard remainderOld == remainderNew else {
+                return nil
+            }
+            return inserted
         }
 
         @objc func executeSubmit() {
@@ -218,22 +289,6 @@ struct GitmojiSearchField: NSViewRepresentable {
                 }
             }
             return false
-        }
-
-        /// 拦截 git add 的空格 / A，不写入 field editor。
-        func control(
-            _ control: NSControl,
-            textView: NSTextView,
-            shouldChangeTextIn range: NSRange,
-            replacementString: String?
-        ) -> Bool {
-            guard shouldConsumeGitAddKeys, let replacementString else {
-                return true
-            }
-            if replacementString == " " || replacementString == "a" || replacementString == "A" {
-                return false
-            }
-            return true
         }
 
         /// 光标在末尾且存在 ghost 时采纳补全。

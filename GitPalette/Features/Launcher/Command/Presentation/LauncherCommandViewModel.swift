@@ -154,16 +154,13 @@ final class LauncherCommandViewModel: ObservableObject {
     /// 同步 query 并刷新建议。
     func executeUpdateQuery(_ query: String) {
         if query != latestQuery {
-            if gitResultViewModel == nil || !query.hasPrefix("/git") {
-                gitResultViewModel = nil
-            }
+            // 用户编辑了文本（add 模式下的空格 / A 已被输入框拦截，不会走到这里）：
+            // 退出结果视图，恢复命令建议，以便重新触发上下选择。
+            gitResultViewModel = nil
         }
         latestQuery = query
         statusMessage = nil
         parseResult = LauncherCommandParser.executeParse(query, language: hintLanguage)
-        if gitResultViewModel != nil {
-            return
-        }
         guard parseResult.isCommandMode else {
             suggestions = []
             selectedIndex = 0

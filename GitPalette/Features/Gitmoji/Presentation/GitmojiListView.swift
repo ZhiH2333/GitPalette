@@ -56,7 +56,13 @@ struct GitmojiListView: View {
                 onSubmit: onConfirmCopy,
                 onCancel: onDismiss,
                 onRequestComplete: onRequestComplete,
-                shouldConsumeGitAddKeys: commandViewModel.gitResultViewModel?.kind == .add
+                shouldConsumeGitAddKeys: commandViewModel.gitResultViewModel?.kind == .add,
+                onGitAddToggleHighlighted: {
+                    commandViewModel.gitResultViewModel?.executeToggleHighlightedSelection()
+                },
+                onGitAddSelectAll: {
+                    commandViewModel.gitResultViewModel?.executeSelectAll()
+                }
             )
             .frame(maxWidth: .infinity, minHeight: 28, maxHeight: 28)
             if !viewModel.query.isEmpty {
