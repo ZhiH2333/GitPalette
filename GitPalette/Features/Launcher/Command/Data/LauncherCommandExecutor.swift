@@ -32,6 +32,11 @@ final class LauncherCommandExecutor {
     private let onSuspendPanelResign: () -> Void
     private let onResumePanelResign: () -> Void
 
+    /// 已链接仓库（供 /git use、/git unlink 建议列表）。
+    func loadLinkedGitRepositories() -> [GitRepository] {
+        gitRepositoryStore.loadRepositories()
+    }
+
     init(
         preferences: PreferencesStore,
         windowPresenter: AppWindowPresenter,

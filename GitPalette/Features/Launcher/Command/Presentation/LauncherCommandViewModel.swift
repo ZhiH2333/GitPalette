@@ -177,7 +177,8 @@ final class LauncherCommandViewModel: ObservableObject {
         }
         suggestions = CommandSuggestionEngine.resolveSuggestions(
             for: query,
-            language: hintLanguage
+            language: hintLanguage,
+            linkedRepositories: executor.loadLinkedGitRepositories()
         )
         executePreferSelectionMatchingQuery(query)
     }
@@ -191,7 +192,8 @@ final class LauncherCommandViewModel: ObservableObject {
             CommandSuggestionEngine.resolveBestCompletion(
                 for: query,
                 selectedIndex: selectedIndex,
-                language: hintLanguage
+                language: hintLanguage,
+                linkedRepositories: executor.loadLinkedGitRepositories()
             )
         else {
             return nil

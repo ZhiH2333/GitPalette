@@ -61,15 +61,17 @@ enum GitSubcommand: Equatable, Sendable {
             }
             return (nil, false, L10n.text(.cmdGitReposNoExtraArgs, language: language))
         case "use":
-            if split.rest.isEmpty {
+            let name: String = executeUnquote(split.rest)
+            if name.isEmpty {
                 return (nil, false, L10n.text(.cmdNeedGitRepositoryName, language: language))
             }
-            return (.use(name: split.rest), true, nil)
+            return (.use(name: name), true, nil)
         case "unlink":
-            if split.rest.isEmpty {
+            let name: String = executeUnquote(split.rest)
+            if name.isEmpty {
                 return (nil, false, L10n.text(.cmdNeedGitRepositoryName, language: language))
             }
-            return (.unlink(name: split.rest), true, nil)
+            return (.unlink(name: name), true, nil)
         case "status":
             if split.rest.isEmpty {
                 return (.status, true, nil)

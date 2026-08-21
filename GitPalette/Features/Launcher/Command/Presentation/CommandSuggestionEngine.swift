@@ -43,7 +43,8 @@ enum CommandSuggestionEngine {
     /// 根据 query 生成建议列表。
     static func resolveSuggestions(
         for query: String,
-        language: AppLanguage
+        language: AppLanguage,
+        linkedRepositories: [GitRepository] = []
     ) -> [CommandSuggestion] {
         guard query.hasPrefix("/") else {
             return []
@@ -58,7 +59,8 @@ enum CommandSuggestionEngine {
                 command: command,
                 query: query,
                 parse: parse,
-                language: language
+                language: language,
+                linkedRepositories: linkedRepositories
             )
         }
         return executeBuildCommandNameSuggestions(query: query, language: language)
@@ -68,10 +70,15 @@ enum CommandSuggestionEngine {
     static func resolveBestCompletion(
         for query: String,
         selectedIndex: Int,
-        language: AppLanguage
+        language: AppLanguage,
+        linkedRepositories: [GitRepository] = []
     ) -> String? {
         let suggestions: [CommandSuggestion] =
-            resolveSuggestions(for: query, language: language)
+            resolveSuggestions(
+                for: query,
+                language: language,
+                linkedRepositories: linkedRepositories
+            )
         guard !suggestions.isEmpty else {
             return nil
         }
@@ -127,7 +134,8 @@ enum CommandSuggestionEngine {
         command: LauncherCommand,
         query: String,
         parse: LauncherCommandParseResult,
-        language: AppLanguage
+        language: AppLanguage,
+        linkedRepositories: [GitRepository]
     ) -> [CommandSuggestion] {
         switch command {
         case .settings:
@@ -188,7 +196,8 @@ enum CommandSuggestionEngine {
             return executeBuildGitSuggestions(
                 query: query,
                 argument: parse.rawArgumentText,
-                language: language
+                language: language,
+                linkedRepositories: linkedRepositories
             )
         case .recent:
             return executeBuildRecentSuggestions(
@@ -218,8 +227,19 @@ enum CommandSuggestionEngine {
     private static func executeBuildGitSuggestions(
         query: String,
         argument: String,
-        language: AppLanguage
+        language: AppLanguage,
+        linkedRepositories: [GitRepository]
     ) -> [CommandSuggestion] {
+        let split: (head: String, rest: String) = executeSplitArgumentHead(argument)
+        let head: String = split.head.lowercased()
+        if head == "use" || head == "unlink" {
+            return executeBuildGitRepositorySuggestions(
+                subcommand: head,
+                namePrefix: split.rest,
+                language: language,
+                linkedRepositories: linkedRepositories
+            )
+        }
         let candidates: [(value: String, summary: String)] = [
             ("link", L10n.text(.cmdArgGitLink, language: language)),
             ("repos", L10n.text(.cmdArgGitRepos, language: language)),
@@ -235,6 +255,68 @@ enum CommandSuggestionEngine {
             argumentPrefix: argument,
             candidates: candidates
         )
+    }
+
+    /// /git use、/git unlink：列出已链接仓库供上下选择。
+    private static func executeBuildGitRepositorySuggestions(
+        subcommand: String,
+        namePrefix: String,
+        language _: AppLanguage,
+        linkedRepositories: [GitRepository]
+    ) -> [CommandSuggestion] {
+        if linkedRepositories.isEmpty {
+            return []
+        }
+        let prefixLower: String = namePrefix.lowercased()
+        let sorted: [GitRepository]
+        if prefixLower.isEmpty {
+            sorted = linkedRepositories
+        } else {
+            sorted = linkedRepositories.sorted { a, b in
+                let aName: String = a.displayName.lowercased()
+                let bName: String = b.displayName.lowercased()
+                let aExact: Bool = aName == prefixLower
+                let bExact: Bool = bName == prefixLower
+                if aExact != bExact { return aExact }
+                let aPrefix: Bool = aName.hasPrefix(prefixLower)
+                let bPrefix: Bool = bName.hasPrefix(prefixLower)
+                if aPrefix != bPrefix { return aPrefix }
+                let aContains: Bool = aName.contains(prefixLower)
+                let bContains: Bool = bName.contains(prefixLower)
+                if aContains != bContains { return aContains }
+                return aName < bName
+            }
+        }
+        return sorted.map { repository in
+            let quotedName: String = executeQuoteIfNeeded(repository.displayName)
+            return CommandSuggestion(
+                id: "arg-git-\(subcommand)-\(repository.id)",
+                primaryText: repository.displayName,
+                secondaryText: nil,
+                summary: repository.path,
+                completionText: "/git \(subcommand) \(quotedName)"
+            )
+        }
+    }
+
+    /// 仓库名含空白时加双引号。
+    private static func executeQuoteIfNeeded(_ value: String) -> String {
+        if value.contains(where: { $0.isWhitespace }) {
+            return "\"" + value + "\""
+        }
+        return value
+    }
+
+    /// 拆分首个参数 token 与剩余文本。
+    private static func executeSplitArgumentHead(_ argument: String) -> (head: String, rest: String) {
+        let trimmed: String = argument.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let spaceIndex: String.Index = trimmed.firstIndex(where: { $0.isWhitespace }) else {
+            return (trimmed, "")
+        }
+        let head: String = String(trimmed[..<spaceIndex])
+        let after: String.Index = trimmed.index(after: spaceIndex)
+        let rest: String = String(trimmed[after...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return (head, rest)
     }
 
     /// /recent 参数建议（Spotlight 风格：始终展示全部子命令，仅排序不隐藏）。
