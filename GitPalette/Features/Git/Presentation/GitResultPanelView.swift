@@ -26,7 +26,7 @@ struct GitResultPanelView: View {
             buildCommitLogList()
         } else if viewModel.entries.isEmpty {
             buildMessageState(
-                systemImage: "checkmark.circle",
+                systemImage: CommandSuggestion.resolveGitSubcommandSystemImageName("status"),
                 message: viewModel.summaryText ?? L10n.text(.gitWorkingTreeClean, language: language)
             )
         } else {
@@ -95,7 +95,7 @@ struct GitResultPanelView: View {
     private func buildCommitLogList() -> some View {
         if viewModel.logEntries.isEmpty {
             buildMessageState(
-                systemImage: "checkmark.circle",
+                systemImage: CommandSuggestion.resolveGitSubcommandSystemImageName("commit"),
                 message: resolveCommitEmptyMessage()
             )
         } else {
@@ -137,7 +137,7 @@ struct GitResultPanelView: View {
     private func buildReposList() -> some View {
         if viewModel.repositories.isEmpty {
             buildMessageState(
-                systemImage: "folder",
+                systemImage: CommandSuggestion.resolveGitSubcommandSystemImageName("repos"),
                 message: viewModel.summaryText ?? L10n.text(.gitErrorNoLinkedRepository, language: language)
             )
         } else {
@@ -145,7 +145,7 @@ struct GitResultPanelView: View {
                 LazyVStack(spacing: 2) {
                     ForEach(viewModel.repositories) { repository in
                         HStack(spacing: 14) {
-                            Image(systemName: "folder")
+                            Image(systemName: CommandSuggestion.resolveGitSubcommandSystemImageName("repos"))
                                 .font(.body.weight(.medium))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 40, alignment: .center)

@@ -20,6 +20,8 @@ struct CommandSuggestion: Identifiable, Equatable, Sendable {
     let completionText: String
     /// 下一参数英文类型 ghost（仅命令名建议）；参数建议为 nil
     let argumentTypeGhost: String?
+    /// 行首 SF Symbol
+    let systemImageName: String
 
     init(
         id: String,
@@ -27,7 +29,8 @@ struct CommandSuggestion: Identifiable, Equatable, Sendable {
         secondaryText: String?,
         summary: String,
         completionText: String,
-        argumentTypeGhost: String? = nil
+        argumentTypeGhost: String? = nil,
+        systemImageName: String = CommandSuggestion.commandSystemImageName
     ) {
         self.id = id
         self.primaryText = primaryText
@@ -35,6 +38,34 @@ struct CommandSuggestion: Identifiable, Equatable, Sendable {
         self.summary = summary
         self.completionText = completionText
         self.argumentTypeGhost = argumentTypeGhost
+        self.systemImageName = systemImageName
+    }
+
+    /// 普通斜杠命令图标。
+    static let commandSystemImageName: String = "chevron.left.forwardslash.chevron.right"
+    /// /git 命令名图标。
+    static let gitSystemImageName: String = "arrow.triangle.branch"
+
+    /// /git 子命令对应的 SF Symbol。
+    static func resolveGitSubcommandSystemImageName(_ subcommand: String) -> String {
+        switch subcommand.lowercased() {
+        case "link":
+            return "link"
+        case "repos":
+            return "folder"
+        case "use":
+            return "checkmark.circle"
+        case "unlink":
+            return gitSystemImageName
+        case "status":
+            return "list.bullet.rectangle"
+        case "add":
+            return "plus.square"
+        case "commit":
+            return "square.and.pencil"
+        default:
+            return gitSystemImageName
+        }
     }
 }
 
@@ -125,7 +156,10 @@ enum CommandSuggestionEngine {
             secondaryText: aliasText,
             summary: command.summary(language: language),
             completionText: command.displayName,
-            argumentTypeGhost: command.argumentTypePlaceholder
+            argumentTypeGhost: command.argumentTypePlaceholder,
+            systemImageName: command == .git
+                ? CommandSuggestion.gitSystemImageName
+                : CommandSuggestion.commandSystemImageName
         )
     }
 
@@ -297,7 +331,8 @@ enum CommandSuggestionEngine {
                 primaryText: repository.displayName,
                 secondaryText: nil,
                 summary: repository.path,
-                completionText: "/git \(subcommand) \(quotedName)"
+                completionText: "/git \(subcommand) \(quotedName)",
+                systemImageName: CommandSuggestion.resolveGitSubcommandSystemImageName(subcommand)
             )
         }
     }
@@ -403,7 +438,10 @@ enum CommandSuggestionEngine {
                 primaryText: value,
                 secondaryText: nil,
                 summary: summary,
-                completionText: "/\(command.name) \(value)"
+                completionText: "/\(command.name) \(value)",
+                systemImageName: command == .git
+                    ? CommandSuggestion.resolveGitSubcommandSystemImageName(value)
+                    : CommandSuggestion.commandSystemImageName
             )
         }
     }

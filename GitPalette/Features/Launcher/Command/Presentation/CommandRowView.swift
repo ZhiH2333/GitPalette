@@ -14,7 +14,7 @@ struct CommandRowView: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: "chevron.left.forwardslash.chevron.right")
+            Image(systemName: suggestion.systemImageName)
                 .font(.body.weight(.medium))
                 .foregroundStyle(.secondary)
                 .frame(width: 40, alignment: .center)

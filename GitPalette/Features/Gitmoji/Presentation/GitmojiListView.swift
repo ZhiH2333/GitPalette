@@ -42,7 +42,7 @@ struct GitmojiListView: View {
     @ViewBuilder
     private func buildSpotlightSearchRow() -> some View {
         HStack(alignment: .center, spacing: 14) {
-            Image(systemName: commandViewModel.isCommandMode ? "chevron.left.forwardslash.chevron.right" : "magnifyingglass")
+            Image(systemName: resolveSearchSystemImageName())
                 .font(.system(size: LauncherChrome.searchIconPointSize, weight: .medium))
                 .foregroundStyle(.secondary)
                 .frame(width: 28, alignment: .center)
@@ -337,6 +337,20 @@ struct GitmojiListView: View {
         }
         .padding(.horizontal, LauncherChrome.footerHorizontalPadding)
         .padding(.vertical, LauncherChrome.footerVerticalPadding)
+    }
+
+    /// 搜索框左侧图标：Gitmoji / 普通命令 / git 命令。
+    private func resolveSearchSystemImageName() -> String {
+        if GitSubcommand.executeIsGitQuery(viewModel.query) {
+            if let head: String = GitSubcommand.executeGitSubcommandHead(viewModel.query) {
+                return CommandSuggestion.resolveGitSubcommandSystemImageName(head)
+            }
+            return CommandSuggestion.gitSystemImageName
+        }
+        if commandViewModel.isCommandMode {
+            return CommandSuggestion.commandSystemImageName
+        }
+        return "magnifyingglass"
     }
 
     /// 命令模式底部状态：已链接显示仓库名；未链接保留「命令模式 N 条建议 (unlink)」。

@@ -93,19 +93,38 @@ enum GitSubcommand: Equatable, Sendable {
         }
     }
 
-    /// 查询是否已进入 /git commit（含后续消息）。
-    static func executeIsCommitQuery(_ query: String) -> Bool {
+    /// 查询是否已进入 /git（含子命令与参数）。
+    static func executeIsGitQuery(_ query: String) -> Bool {
         let trimmed: String = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.hasPrefix("/") else {
             return false
         }
         let afterSlash: String = String(trimmed.dropFirst())
         let commandSplit: (head: String, rest: String) = executeSplitHead(afterSlash)
+        return commandSplit.head.lowercased() == "git"
+    }
+
+    /// 取出 /git 后的子命令 token；未进入 git 或尚无子命令则为 nil。
+    static func executeGitSubcommandHead(_ query: String) -> String? {
+        let trimmed: String = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("/") else {
+            return nil
+        }
+        let afterSlash: String = String(trimmed.dropFirst())
+        let commandSplit: (head: String, rest: String) = executeSplitHead(afterSlash)
         guard commandSplit.head.lowercased() == "git" else {
-            return false
+            return nil
         }
         let subcommandSplit: (head: String, rest: String) = executeSplitHead(commandSplit.rest)
-        return subcommandSplit.head.lowercased() == "commit"
+        if subcommandSplit.head.isEmpty {
+            return nil
+        }
+        return subcommandSplit.head.lowercased()
+    }
+
+    /// 查询是否已进入 /git commit（含后续消息）。
+    static func executeIsCommitQuery(_ query: String) -> Bool {
+        executeGitSubcommandHead(query) == "commit"
     }
 
     /// 拆分子命令 token 与剩余参数。
