@@ -184,6 +184,12 @@ enum CommandSuggestionEngine {
                     ("launcher", L10n.text(.cmdArgMenubarLauncher, language: language))
                 ]
             )
+        case .git:
+            return executeBuildGitSuggestions(
+                query: query,
+                argument: parse.rawArgumentText,
+                language: language
+            )
         case .recent:
             return executeBuildRecentSuggestions(
                 query: query,
@@ -206,6 +212,29 @@ enum CommandSuggestionEngine {
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
             return [executeMakeCommandSuggestion(command, language: language)]
         }
+    }
+
+    /// /git 参数建议。
+    private static func executeBuildGitSuggestions(
+        query: String,
+        argument: String,
+        language: AppLanguage
+    ) -> [CommandSuggestion] {
+        let candidates: [(value: String, summary: String)] = [
+            ("link", L10n.text(.cmdArgGitLink, language: language)),
+            ("repos", L10n.text(.cmdArgGitRepos, language: language)),
+            ("use", L10n.text(.cmdArgGitUse, language: language)),
+            ("unlink", L10n.text(.cmdArgGitUnlink, language: language)),
+            ("status", L10n.text(.cmdArgGitStatus, language: language)),
+            ("add", L10n.text(.cmdArgGitAdd, language: language)),
+            ("commit", L10n.text(.cmdArgGitCommit, language: language))
+        ]
+        return executeFilterArgumentCandidates(
+            command: .git,
+            query: query,
+            argumentPrefix: argument,
+            candidates: candidates
+        )
     }
 
     /// /recent 参数建议（Spotlight 风格：始终展示全部子命令，仅排序不隐藏）。

@@ -25,6 +25,7 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
     case hide
     case menubar
     case help
+    case git
 
     var id: String { rawValue }
 
@@ -50,7 +51,7 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
         case .menubar:
             return ["menuclick"]
         case .general, .about, .language, .codelang, .desclang,
-                .style, .format, .template, .recent, .hide:
+                .style, .format, .template, .recent, .hide, .git:
             return []
         }
     }
@@ -91,6 +92,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             key = .cmdSummaryMenubar
         case .help:
             key = .cmdSummaryHelp
+        case .git:
+            key = .cmdSummaryGit
         }
         return L10n.text(key, language: language)
     }
@@ -112,6 +115,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             return "{emoji} {code} {name} {description}"
         case .recent:
             return "clear | count <n>"
+        case .git:
+            return "link | repos | use | unlink | status | add | commit"
         case .menubar:
             return "menu | launcher"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
@@ -135,6 +140,8 @@ enum LauncherCommand: String, CaseIterable, Identifiable, Sendable {
             return "<template>"
         case .recent:
             return "<action>"
+        case .git:
+            return "<subcommand>"
         case .menubar:
             return "<menu|launcher>"
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:

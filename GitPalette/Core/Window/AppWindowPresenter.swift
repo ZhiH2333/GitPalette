@@ -56,4 +56,19 @@ final class AppWindowPresenter: ObservableObject {
         AppWindowFocus.executePrepareForWindowPresentation()
         openPermissionsHandler?()
     }
+
+    /// 选择本地文件夹（供 /git link 无参数时使用）。
+    func executePickDirectory() -> String? {
+        AppWindowFocus.executePrepareForWindowPresentation()
+        let panel: NSOpenPanel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        let response: NSApplication.ModalResponse = panel.runModal()
+        guard response == .OK, let url: URL = panel.url else {
+            return nil
+        }
+        return url.path
+    }
 }

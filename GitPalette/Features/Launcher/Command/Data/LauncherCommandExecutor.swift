@@ -9,13 +9,15 @@ import AppKit
 import Foundation
 
 /// 命令执行结果。
-enum LauncherCommandExecutionOutcome: Equatable, Sendable {
+enum LauncherCommandExecutionOutcome {
     /// 已执行且应关闭面板；可选择是否把焦点交还唤起前的应用
     case dismissed(shouldRestoreFocus: Bool)
     /// 已处理但保持面板（如 /help、参数非法）
     case keptOpen(message: String?)
     /// 退出应用（面板可不再关心）
     case quitApp
+    /// 已执行且保持打开，切换到结果视图
+    case presentingResult(GitResultViewModel)
 }
 
 /// 命令执行器。
@@ -24,21 +26,30 @@ final class LauncherCommandExecutor {
     private let preferences: PreferencesStore
     private let windowPresenter: AppWindowPresenter
     private let hotKeyService: HotKeyService
+    private let gitRepositoryStore: GitRepositoryStore
     private let onClearRecent: () -> Void
     private let onReloadRecent: () -> Void
+    private let onSuspendPanelResign: () -> Void
+    private let onResumePanelResign: () -> Void
 
     init(
         preferences: PreferencesStore,
         windowPresenter: AppWindowPresenter,
         hotKeyService: HotKeyService,
+        gitRepositoryStore: GitRepositoryStore,
         onClearRecent: @escaping () -> Void,
-        onReloadRecent: @escaping () -> Void
+        onReloadRecent: @escaping () -> Void,
+        onSuspendPanelResign: @escaping () -> Void,
+        onResumePanelResign: @escaping () -> Void
     ) {
         self.preferences = preferences
         self.windowPresenter = windowPresenter
         self.hotKeyService = hotKeyService
+        self.gitRepositoryStore = gitRepositoryStore
         self.onClearRecent = onClearRecent
         self.onReloadRecent = onReloadRecent
+        self.onSuspendPanelResign = onSuspendPanelResign
+        self.onResumePanelResign = onResumePanelResign
     }
 
     /// 命令提示语言（跟随 desclang）。
@@ -125,6 +136,8 @@ final class LauncherCommandExecutor {
             return .dismissed(shouldRestoreFocus: true)
         case .recent:
             return executeRecent(argument)
+        case .git:
+            return executeGit(argument)
         case .menubar:
             guard let behavior: MenuBarClickBehavior =
                 LauncherCommandParser.resolveMenuBarClickBehavior(argument)
@@ -168,5 +181,126 @@ final class LauncherCommandExecutor {
             return .dismissed(shouldRestoreFocus: true)
         }
         return .keptOpen(message: L10n.text(.cmdUnsupportedSubcommand, language: hintLanguage))
+    }
+
+    /// 执行 /git 子命令。
+    private func executeGit(_ argument: String) -> LauncherCommandExecutionOutcome {
+        let parsed: (subcommand: GitSubcommand?, isExecutable: Bool, message: String?) =
+            GitSubcommand.executeParse(argument: argument, language: hintLanguage)
+        guard parsed.isExecutable, let subcommand: GitSubcommand = parsed.subcommand else {
+            return .keptOpen(message: parsed.message)
+        }
+        switch subcommand {
+        case .link(let path):
+            return executeGitLink(path: path)
+        case .repos:
+            return executePresentGitResult(kind: .repos)
+        case .use(let name):
+            return executeGitUse(name: name)
+        case .unlink(let name):
+            return executeGitUnlink(name: name)
+        case .status:
+            return executePresentGitResult(kind: .status)
+        case .add:
+            return executePresentGitResult(kind: .add)
+        case .commit(let message):
+            return executePresentGitResult(kind: .commit, commitMessage: message)
+        }
+    }
+
+    /// 链接仓库（路径或文件夹选择器）。
+    private func executeGitLink(path: String?) -> LauncherCommandExecutionOutcome {
+        let resolvedPath: String?
+        if let path, !path.isEmpty {
+            resolvedPath = path
+        } else {
+            onSuspendPanelResign()
+            resolvedPath = windowPresenter.executePickDirectory()
+            onResumePanelResign()
+            if resolvedPath == nil {
+                return .keptOpen(message: nil)
+            }
+        }
+        guard let resolvedPath else {
+            return .keptOpen(message: nil)
+        }
+        do {
+            let repository: GitRepository = try gitRepositoryStore.executeLink(path: resolvedPath)
+            return .keptOpen(
+                message: L10n.text(.gitLinkSucceeded, language: hintLanguage) + repository.displayName
+            )
+        } catch let error as GitCommandError {
+            return .keptOpen(message: error.localizedMessage(language: hintLanguage))
+        } catch {
+            return .keptOpen(
+                message: GitCommandError.processLaunchFailed(error.localizedDescription)
+                    .localizedMessage(language: hintLanguage)
+            )
+        }
+    }
+
+    /// 切换当前仓库。
+    private func executeGitUse(name: String) -> LauncherCommandExecutionOutcome {
+        do {
+            let repository: GitRepository = try gitRepositoryStore.executeUse(name: name)
+            return .keptOpen(
+                message: L10n.text(.gitUseSucceeded, language: hintLanguage) + repository.displayName
+            )
+        } catch let error as GitCommandError {
+            return .keptOpen(message: error.localizedMessage(language: hintLanguage))
+        } catch {
+            return .keptOpen(
+                message: GitCommandError.processLaunchFailed(error.localizedDescription)
+                    .localizedMessage(language: hintLanguage)
+            )
+        }
+    }
+
+    /// 移除已链接仓库。
+    private func executeGitUnlink(name: String) -> LauncherCommandExecutionOutcome {
+        do {
+            let outcome: GitUnlinkOutcome = try gitRepositoryStore.executeUnlink(name: name)
+            if outcome.needsUse {
+                return .keptOpen(
+                    message: L10n.text(.gitUnlinkSucceeded, language: hintLanguage)
+                        + outcome.removed.displayName
+                        + "。 "
+                        + L10n.text(.gitUnlinkNeedsUse, language: hintLanguage)
+                )
+            }
+            let suffix: String
+            if let next: GitRepository = outcome.newActive {
+                suffix = L10n.text(.gitUseSucceeded, language: hintLanguage) + next.displayName
+            } else {
+                suffix = ""
+            }
+            return .keptOpen(
+                message: L10n.text(.gitUnlinkSucceeded, language: hintLanguage)
+                    + outcome.removed.displayName
+                    + (suffix.isEmpty ? "" : "。 " + suffix)
+            )
+        } catch let error as GitCommandError {
+            return .keptOpen(message: error.localizedMessage(language: hintLanguage))
+        } catch {
+            return .keptOpen(
+                message: GitCommandError.processLaunchFailed(error.localizedDescription)
+                    .localizedMessage(language: hintLanguage)
+            )
+        }
+    }
+
+    /// 打开结果视图并异步执行。
+    private func executePresentGitResult(
+        kind: GitResultKind,
+        commitMessage: String? = nil
+    ) -> LauncherCommandExecutionOutcome {
+        let viewModel: GitResultViewModel = GitResultViewModel(
+            kind: kind,
+            store: gitRepositoryStore,
+            language: hintLanguage,
+            commitMessage: commitMessage
+        )
+        viewModel.executeStart()
+        return .presentingResult(viewModel)
     }
 }

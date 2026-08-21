@@ -19,6 +19,8 @@ final class LauncherCommandViewModel: ObservableObject {
     @Published var statusMessage: String?
     /// 最近一次解析结果
     @Published private(set) var parseResult: LauncherCommandParseResult = .notCommandMode
+    /// Git 命令结果视图（执行后保持打开）
+    @Published private(set) var gitResultViewModel: GitResultViewModel?
     private let executor: LauncherCommandExecutor
     private let preferences: PreferencesStore
     private var cancellables: Set<AnyCancellable> = []
@@ -113,6 +115,23 @@ final class LauncherCommandViewModel: ObservableObject {
                 return query.hasSuffix(" ") ? "<n>" : " <n>"
             }
         }
+        if command == .git {
+            let parts: [String] = argument
+                .split(whereSeparator: { $0.isWhitespace })
+                .map(String.init)
+            if parts.count == 1 {
+                let head: String = parts[0].lowercased()
+                if head == "use" || head == "unlink" {
+                    return query.hasSuffix(" ") ? "<name>" : " <name>"
+                }
+                if head == "link" {
+                    return query.hasSuffix(" ") ? "<path>" : " <path>"
+                }
+                if head == "commit" {
+                    return query.hasSuffix(" ") ? "<message>" : " <message>"
+                }
+            }
+        }
         return nil
     }
 
@@ -121,6 +140,7 @@ final class LauncherCommandViewModel: ObservableObject {
         suggestions = []
         selectedIndex = 0
         statusMessage = nil
+        gitResultViewModel = nil
         parseResult = .notCommandMode
         latestQuery = ""
         shouldSkipNextSuggestionRefresh = false
@@ -133,6 +153,9 @@ final class LauncherCommandViewModel: ObservableObject {
 
     /// 同步 query 并刷新建议。
     func executeUpdateQuery(_ query: String) {
+        if query != latestQuery {
+            gitResultViewModel = nil
+        }
         latestQuery = query
         statusMessage = nil
         parseResult = LauncherCommandParser.executeParse(query, language: hintLanguage)
@@ -244,10 +267,22 @@ final class LauncherCommandViewModel: ObservableObject {
     ) -> LauncherCommandExecutionOutcome {
         parseResult = result
         let outcome: LauncherCommandExecutionOutcome = executor.execute(parseResult: result)
-        if case .keptOpen(let message) = outcome {
+        switch outcome {
+        case .keptOpen(let message):
+            gitResultViewModel = nil
             statusMessage = message
+        case .presentingResult(let viewModel):
+            statusMessage = nil
+            gitResultViewModel = viewModel
+        case .dismissed, .quitApp:
+            gitResultViewModel = nil
         }
         return outcome
+    }
+
+    /// 是否正在展示 Git 结果视图。
+    var isShowingGitResult: Bool {
+        gitResultViewModel != nil
     }
 
     /// 点击建议行：可执行则执行，否则应用补全文本。

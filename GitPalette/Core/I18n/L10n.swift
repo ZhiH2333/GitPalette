@@ -136,6 +136,45 @@ enum L10nKey: String, Sendable {
     case cmdUnsupportedSubcommand
     case cmdUnknownCommand
     case cmdIncompleteArguments
+    case cmdSummaryGit
+    case cmdNeedGitSubcommand
+    case cmdGitReposNoExtraArgs
+    case cmdNeedGitRepositoryName
+    case cmdGitStatusNoExtraArgs
+    case cmdGitAddNoExtraArgs
+    case cmdNeedGitCommitMessage
+    case cmdArgGitLink
+    case cmdArgGitRepos
+    case cmdArgGitUse
+    case cmdArgGitUnlink
+    case cmdArgGitStatus
+    case cmdArgGitAdd
+    case cmdArgGitCommit
+    case gitStatusModified
+    case gitStatusAdded
+    case gitStatusDeleted
+    case gitStatusUntracked
+    case gitStatusRenamed
+    case gitWorkingTreeClean
+    case gitErrorNoLinkedRepository
+    case gitErrorPathDoesNotExist
+    case gitErrorNotGitRepository
+    case gitErrorRepositoryNameNotFound
+    case gitErrorProcessLaunchFailed
+    case gitErrorNonZeroExit
+    case gitErrorNoStagedChanges
+    case gitErrorNoSelectedPaths
+    case gitErrorRepositoryPathInvalid
+    case gitCommitSucceeded
+    case gitCommitFileCountSuffix
+    case gitLinkSucceeded
+    case gitUseSucceeded
+    case gitUnlinkSucceeded
+    case gitUnlinkNeedsUse
+    case gitReposActiveMark
+    case gitResultRunning
+    case gitHintAdd
+    case gitHintStatus
 }
 
 /// 界面文案表。
@@ -276,7 +315,46 @@ enum L10n {
         .cmdCountMustBeInteger: "Count must be an integer",
         .cmdUnsupportedSubcommand: "Unsupported subcommand",
         .cmdUnknownCommand: "No matching command found",
-        .cmdIncompleteArguments: "Command arguments are incomplete"
+        .cmdIncompleteArguments: "Command arguments are incomplete",
+        .cmdSummaryGit: "Local git: link / repos / use / unlink / status / add / commit",
+        .cmdNeedGitSubcommand: "Specify a git subcommand, e.g. status",
+        .cmdGitReposNoExtraArgs: "repos does not take extra arguments",
+        .cmdNeedGitRepositoryName: "Specify a linked repository name",
+        .cmdGitStatusNoExtraArgs: "status does not take extra arguments",
+        .cmdGitAddNoExtraArgs: "add does not take extra arguments",
+        .cmdNeedGitCommitMessage: "Specify a commit message",
+        .cmdArgGitLink: "Link a local git repository (optional path; omit to pick a folder)",
+        .cmdArgGitRepos: "List linked repositories",
+        .cmdArgGitUse: "Switch the active repository",
+        .cmdArgGitUnlink: "Unlink a repository",
+        .cmdArgGitStatus: "Show structured working tree status",
+        .cmdArgGitAdd: "Select files graphically and git add",
+        .cmdArgGitCommit: "Create a local commit with a plain-text message",
+        .gitStatusModified: "Modified",
+        .gitStatusAdded: "Added",
+        .gitStatusDeleted: "Deleted",
+        .gitStatusUntracked: "Untracked",
+        .gitStatusRenamed: "Renamed",
+        .gitWorkingTreeClean: "工作区干净",
+        .gitErrorNoLinkedRepository: "尚未链接任何仓库，请先执行 /git link",
+        .gitErrorPathDoesNotExist: "路径不存在：",
+        .gitErrorNotGitRepository: "不是 Git 仓库：",
+        .gitErrorRepositoryNameNotFound: "未找到已链接仓库：",
+        .gitErrorProcessLaunchFailed: "无法启动 git 进程：",
+        .gitErrorNonZeroExit: "git 命令失败：",
+        .gitErrorNoStagedChanges: "没有已暂存的改动，无法提交",
+        .gitErrorNoSelectedPaths: "请先用空格勾选要暂存的文件",
+        .gitErrorRepositoryPathInvalid: "仓库路径已失效：",
+        .gitCommitSucceeded: "提交成功，文件数 ",
+        .gitCommitFileCountSuffix: "，版本 ",
+        .gitLinkSucceeded: "已链接仓库：",
+        .gitUseSucceeded: "已切换到仓库：",
+        .gitUnlinkSucceeded: "已移除仓库：",
+        .gitUnlinkNeedsUse: "当前没有活跃仓库，请执行 /git use 或 /git link",
+        .gitReposActiveMark: "当前",
+        .gitResultRunning: "正在执行…",
+        .gitHintAdd: "↑↓ 移动 · Space 勾选 · A 全选 · ⏎ 暂存",
+        .gitHintStatus: "↑↓ 浏览 · 工作区状态"
     ]
 
     private static let simplifiedChinese: [L10nKey: String] = [
@@ -405,7 +483,46 @@ enum L10n {
         .cmdCountMustBeInteger: "数量必须是整数",
         .cmdUnsupportedSubcommand: "不支持的子命令",
         .cmdUnknownCommand: "未找到匹配的命令",
-        .cmdIncompleteArguments: "命令参数不完整"
+        .cmdIncompleteArguments: "命令参数不完整",
+        .cmdSummaryGit: "本地 git：link / repos / use / unlink / status / add / commit",
+        .cmdNeedGitSubcommand: "请指定 git 子命令，例如 status",
+        .cmdGitReposNoExtraArgs: "repos 不需要额外参数",
+        .cmdNeedGitRepositoryName: "请指定已链接的仓库名称",
+        .cmdGitStatusNoExtraArgs: "status 不需要额外参数",
+        .cmdGitAddNoExtraArgs: "add 不需要额外参数",
+        .cmdNeedGitCommitMessage: "请输入提交说明",
+        .cmdArgGitLink: "链接本地 git 仓库（可给路径；省略则弹出文件夹选择器）",
+        .cmdArgGitRepos: "列出已链接仓库",
+        .cmdArgGitUse: "切换当前仓库",
+        .cmdArgGitUnlink: "移除已链接仓库",
+        .cmdArgGitStatus: "展示结构化工作区状态",
+        .cmdArgGitAdd: "图形化多选文件并 git add",
+        .cmdArgGitCommit: "使用纯文本消息创建本地提交",
+        .gitStatusModified: "已修改",
+        .gitStatusAdded: "新增",
+        .gitStatusDeleted: "已删除",
+        .gitStatusUntracked: "未跟踪",
+        .gitStatusRenamed: "已重命名",
+        .gitWorkingTreeClean: "工作区干净",
+        .gitErrorNoLinkedRepository: "尚未链接任何仓库，请先执行 /git link",
+        .gitErrorPathDoesNotExist: "路径不存在：",
+        .gitErrorNotGitRepository: "不是 Git 仓库：",
+        .gitErrorRepositoryNameNotFound: "未找到已链接仓库：",
+        .gitErrorProcessLaunchFailed: "无法启动 git 进程：",
+        .gitErrorNonZeroExit: "git 命令失败：",
+        .gitErrorNoStagedChanges: "没有已暂存的改动，无法提交",
+        .gitErrorNoSelectedPaths: "请先用空格勾选要暂存的文件",
+        .gitErrorRepositoryPathInvalid: "仓库路径已失效：",
+        .gitCommitSucceeded: "提交成功，文件数 ",
+        .gitCommitFileCountSuffix: "，版本 ",
+        .gitLinkSucceeded: "已链接仓库：",
+        .gitUseSucceeded: "已切换到仓库：",
+        .gitUnlinkSucceeded: "已移除仓库：",
+        .gitUnlinkNeedsUse: "当前没有活跃仓库，请执行 /git use 或 /git link",
+        .gitReposActiveMark: "当前",
+        .gitResultRunning: "正在执行…",
+        .gitHintAdd: "↑↓ 移动 · Space 勾选 · A 全选 · ⏎ 暂存",
+        .gitHintStatus: "↑↓ 浏览 · 工作区状态"
     ]
 }
 

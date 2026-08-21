@@ -18,4 +18,6 @@ enum PreferencesKeys {
     static let codeTranslationLanguage: String = "gitpalette.codeTranslationLanguage"
     static let descriptionLanguage: String = "gitpalette.descriptionLanguage"
     static let menuBarClickBehavior: String = "gitpalette.menuBarClickBehavior"
+    static let linkedGitRepositories: String = "gitpalette.linkedGitRepositories"
+    static let activeGitRepositoryID: String = "gitpalette.activeGitRepositoryID"
 }

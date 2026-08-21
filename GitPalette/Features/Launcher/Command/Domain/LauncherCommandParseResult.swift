@@ -120,7 +120,19 @@ enum LauncherCommandParser {
             return executeValidateMenubar(argument, language: language)
         case .recent:
             return executeValidateRecent(argument, language: language)
+        case .git:
+            return executeValidateGit(argument, language: language)
         }
+    }
+
+    /// 校验 /git 子命令。
+    private static func executeValidateGit(
+        _ argument: String,
+        language: AppLanguage
+    ) -> (isExecutable: Bool, message: String?) {
+        let parsed: (subcommand: GitSubcommand?, isExecutable: Bool, message: String?) =
+            GitSubcommand.executeParse(argument: argument, language: language)
+        return (parsed.isExecutable, parsed.message)
     }
 
     /// 校验 /menubar 参数。

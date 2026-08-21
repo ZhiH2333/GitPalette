@@ -13,6 +13,7 @@ import SwiftUI
 final class LauncherController {
     private let appConfig: AppConfig
     private let recentStore: RecentGitmojiStore
+    private let gitRepositoryStore: GitRepositoryStore
     private let viewModel: GitmojiListViewModel
     private let commandViewModel: LauncherCommandViewModel
     private var panel: NSPanel?
@@ -23,6 +24,7 @@ final class LauncherController {
     private var focusToken: UUID = UUID()
     private var isPresenting: Bool = false
     private var previousFrontApp: NSRunningApplication?
+    private let resignGate: ResignGate = ResignGate()
 
     init(
         appConfig: AppConfig,
@@ -33,6 +35,8 @@ final class LauncherController {
     ) {
         self.appConfig = appConfig
         self.recentStore = recentStore
+        let gitRepositoryStore: GitRepositoryStore = GitRepositoryStore()
+        self.gitRepositoryStore = gitRepositoryStore
         let resolvedRepository: GitmojiRepository =
             repository ?? ((try? BundleGitmojiRepository()) ?? EmptyGitmojiRepository())
         let listViewModel: GitmojiListViewModel = GitmojiListViewModel(
@@ -45,12 +49,19 @@ final class LauncherController {
             preferences: appConfig,
             windowPresenter: windowPresenter,
             hotKeyService: hotKeyService,
+            gitRepositoryStore: gitRepositoryStore,
             onClearRecent: {
                 recentStore.executeClear()
                 listViewModel.executeReloadRecentItems()
             },
             onReloadRecent: {
                 listViewModel.executeReloadRecentItems()
+            },
+            onSuspendPanelResign: { [resignGate] in
+                resignGate.isSuspended = true
+            },
+            onResumePanelResign: { [resignGate] in
+                resignGate.isSuspended = false
             }
         )
         self.commandViewModel = LauncherCommandViewModel(executor: executor, preferences: appConfig)
@@ -146,6 +157,17 @@ final class LauncherController {
 
     /// 执行当前斜杠命令。
     private func executeConfirmCommand() {
+        if let gitResult: GitResultViewModel = commandViewModel.gitResultViewModel {
+            if gitResult.isAddMode {
+                gitResult.executeConfirmAdd()
+                return
+            }
+            if gitResult.kind == .status {
+                gitResult.executeStart()
+                return
+            }
+            return
+        }
         let outcome: LauncherCommandExecutionOutcome =
             commandViewModel.executeConfirm(query: viewModel.query)
         switch outcome {
@@ -154,6 +176,8 @@ final class LauncherController {
         case .quitApp:
             dismiss(shouldRestoreFocus: false)
         case .keptOpen:
+            executeRefreshHostingContent()
+        case .presentingResult:
             executeRefreshHostingContent()
         }
     }
@@ -288,7 +312,10 @@ final class LauncherController {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.dismiss(shouldRestoreFocus: false)
+                guard let self, !self.resignGate.isSuspended else {
+                    return
+                }
+                self.dismiss(shouldRestoreFocus: false)
             }
         }
     }
@@ -340,6 +367,9 @@ final class LauncherController {
             || event.modifierFlags.contains(.control) {
             return event
         }
+        if let gitResult: GitResultViewModel = commandViewModel.gitResultViewModel {
+            return executeHandleGitResultKey(event, gitResult: gitResult)
+        }
         let isCommandMode: Bool = viewModel.query.hasPrefix("/")
         switch event.keyCode {
         case 126:
@@ -375,5 +405,39 @@ final class LauncherController {
         default:
             return event
         }
+    }
+
+    /// Git 结果视图下的方向键 / Space / 全选。
+    private func executeHandleGitResultKey(
+        _ event: NSEvent,
+        gitResult: GitResultViewModel
+    ) -> NSEvent? {
+        switch event.keyCode {
+        case 126:
+            gitResult.executeSelectPrevious()
+            return nil
+        case 125:
+            gitResult.executeSelectNext()
+            return nil
+        case 49:
+            if gitResult.isAddMode {
+                gitResult.executeToggleHighlightedSelection()
+                return nil
+            }
+            return event
+        case 0:
+            if gitResult.isAddMode {
+                gitResult.executeSelectAll()
+                return nil
+            }
+            return event
+        default:
+            return event
+        }
+    }
+
+    /// 打开系统文件夹选择器时暂停面板失焦关闭。
+    private final class ResignGate {
+        var isSuspended: Bool = false
     }
 }

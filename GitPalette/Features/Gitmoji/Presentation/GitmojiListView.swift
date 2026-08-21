@@ -145,7 +145,12 @@ struct GitmojiListView: View {
     /// 构建结果区（命令模式 / 列表 / 空态）。
     @ViewBuilder
     private func buildResultArea() -> some View {
-        if commandViewModel.isCommandMode {
+        if let gitResult: GitResultViewModel = commandViewModel.gitResultViewModel {
+            GitResultPanelView(
+                viewModel: gitResult,
+                language: appConfig.descriptionLanguage
+            )
+        } else if commandViewModel.isCommandMode {
             buildCommandResultArea()
         } else if viewModel.isDataEmpty {
             buildEmptyState(message: appConfig.t(.noGitmojiData))
@@ -220,6 +225,8 @@ struct GitmojiListView: View {
         case .quitApp:
             onDismissWithoutFocusRestore()
         case .keptOpen:
+            break
+        case .presentingResult:
             break
         }
     }
@@ -327,6 +334,12 @@ struct GitmojiListView: View {
 
     /// 命令模式底部状态（跟随 UI 语言）：「命令模式 15 条建议」。
     private func resolveCommandFooterStatusText() -> String {
+        if commandViewModel.gitResultViewModel != nil {
+            if commandViewModel.gitResultViewModel?.kind == .add {
+                return appConfig.t(.gitHintAdd)
+            }
+            return appConfig.t(.gitHintStatus)
+        }
         if commandViewModel.suggestions.isEmpty {
             return "\(appConfig.t(.commandMode)) · \(appConfig.t(.cmdNoMatch))"
         }

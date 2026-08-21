@@ -205,6 +205,51 @@ struct CommandHelpNode: Identifiable, Hashable {
                     children: nil
                 )
             ]
+        case .git:
+            return [
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "link",
+                    summaryKey: .cmdArgGitLink,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "repos",
+                    summaryKey: .cmdArgGitRepos,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "use",
+                    summaryKey: .cmdArgGitUse,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "unlink",
+                    summaryKey: .cmdArgGitUnlink,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "status",
+                    summaryKey: .cmdArgGitStatus,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "add",
+                    summaryKey: .cmdArgGitAdd,
+                    language: language
+                ),
+                executeMakeArgumentNode(
+                    command: command,
+                    value: "commit",
+                    summaryKey: .cmdArgGitCommit,
+                    language: language
+                )
+            ]
         case .general, .hotkey, .about, .permissions, .quit, .hide, .help:
             return []
         }
