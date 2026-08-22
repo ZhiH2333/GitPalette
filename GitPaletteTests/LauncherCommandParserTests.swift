@@ -43,10 +43,10 @@ final class LauncherCommandParserTests: XCTestCase {
     }
 
     @MainActor
-    func testGitCommitRequiresMessageAtParserLayer() {
+    func testGitCommitWithoutMessageIsExecutablePreview() {
         let incomplete = LauncherCommandParser.executeParse("/git commit", language: .english)
         XCTAssertEqual(incomplete.matchedCommand, .git)
-        XCTAssertFalse(incomplete.isExecutable)
+        XCTAssertTrue(incomplete.isExecutable)
 
         let complete = LauncherCommandParser.executeParse("/git commit ship it", language: .english)
         XCTAssertTrue(complete.isExecutable)

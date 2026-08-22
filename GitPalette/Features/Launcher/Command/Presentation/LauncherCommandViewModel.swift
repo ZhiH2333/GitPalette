@@ -167,13 +167,13 @@ final class LauncherCommandViewModel: ObservableObject {
             shouldSkipNextSuggestionRefresh = false
             return
         }
+        if isCommitQuery && gitResultViewModel == nil {
+            gitResultViewModel = executor.executeMakeCommitLogViewModel()
+        }
         // ↑↓ 回填补全：保留当前建议列表与 selectedIndex，避免收窄后无法切回。
         if shouldSkipNextSuggestionRefresh {
             shouldSkipNextSuggestionRefresh = false
             return
-        }
-        if isCommitQuery && gitResultViewModel == nil {
-            gitResultViewModel = executor.executeMakeCommitLogViewModel()
         }
         suggestions = CommandSuggestionEngine.resolveSuggestions(
             for: query,
@@ -276,7 +276,9 @@ final class LauncherCommandViewModel: ObservableObject {
         let outcome: LauncherCommandExecutionOutcome = executor.execute(parseResult: result)
         switch outcome {
         case .keptOpen(let message):
-            gitResultViewModel = nil
+            if gitResultViewModel?.kind != .commit {
+                gitResultViewModel = nil
+            }
             statusMessage = message
         case .presentingResult(let viewModel):
             statusMessage = nil

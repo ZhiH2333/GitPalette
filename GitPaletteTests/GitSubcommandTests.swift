@@ -40,27 +40,24 @@ final class GitSubcommandTests: XCTestCase {
     }
 
     @MainActor
-    func testRejectsEmptyCommitMessage() {
+    func testEmptyCommitOpensHistoryPreview() {
         let parsed = GitSubcommand.executeParse(argument: "commit", language: .english)
-        XCTAssertFalse(parsed.isExecutable)
-        XCTAssertNil(parsed.subcommand)
+        XCTAssertTrue(parsed.isExecutable)
+        XCTAssertEqual(parsed.subcommand, .commit(message: ""))
     }
 
     @MainActor
-    func testRejectsWhitespaceOnlyCommitMessage() {
+    func testWhitespaceOnlyCommitOpensHistoryPreview() {
         let parsed = GitSubcommand.executeParse(argument: "commit    ", language: .english)
-        XCTAssertFalse(parsed.isExecutable)
-        XCTAssertNil(parsed.subcommand)
+        XCTAssertTrue(parsed.isExecutable)
+        XCTAssertEqual(parsed.subcommand, .commit(message: ""))
     }
 
     @MainActor
-    func testRejectsQuotedWhitespaceOnlyCommitMessage() {
+    func testQuotedWhitespaceOnlyCommitOpensHistoryPreview() {
         let parsed = GitSubcommand.executeParse(argument: "commit \"   \"", language: .english)
-        XCTAssertFalse(
-            parsed.isExecutable,
-            "quoted whitespace is not a real commit message"
-        )
-        XCTAssertNil(parsed.subcommand)
+        XCTAssertTrue(parsed.isExecutable)
+        XCTAssertEqual(parsed.subcommand, .commit(message: ""))
     }
 
     @MainActor
