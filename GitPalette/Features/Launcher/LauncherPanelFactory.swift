@@ -30,8 +30,8 @@ enum LauncherPanelFactory {
         panel.isMovableByWindowBackground = true
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        // 圆角阴影由 SwiftUI 外壳负责，避免 AppKit 矩形阴影穿帮。
-        panel.hasShadow = false
+        // 系统阴影按窗口 alpha（圆角透明）绘制，不计入窗口 frame。
+        panel.hasShadow = true
         panel.hidesOnDeactivate = false
         panel.becomesKeyOnlyIfNeeded = false
         panel.titleVisibility = .hidden
@@ -64,6 +64,7 @@ enum LauncherPanelFactory {
         panel.animationBehavior = resolveAnimationBehavior()
         panel.alphaValue = 1
         panel.makeKeyAndOrderFront(nil)
+        panel.invalidateShadow()
     }
 
     /// 以系统动画隐藏面板。

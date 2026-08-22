@@ -3,7 +3,7 @@
 //  GitPalette
 //
 //  启动器浮层外壳：macOS 26+ 可液态玻璃，其余为毛玻璃。
-//  阴影用圆角 fill + blur 叠层，避免 .shadow 在透明 Hosting 下变成硬边方影。
+//  圆角外透明，系统窗口阴影按 alpha 形状绘制。
 //
 
 import SwiftUI
@@ -23,25 +23,7 @@ struct LauncherGlassShell: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        ZStack {
-            buildSoftShadow(shape: shape)
-            buildChrome(content: content, shape: shape)
-        }
-    }
-
-    /// 柔和圆角阴影（远距扩散 + 近距接触影）。
-    @ViewBuilder
-    private func buildSoftShadow(shape: RoundedRectangle) -> some View {
-        shape
-            .fill(Color.black.opacity(0.22))
-            .blur(radius: LauncherChrome.shadowFarBlur)
-            .offset(y: 14)
-            .allowsHitTesting(false)
-        shape
-            .fill(Color.black.opacity(0.14))
-            .blur(radius: LauncherChrome.shadowNearBlur)
-            .offset(y: 5)
-            .allowsHitTesting(false)
+        buildChrome(content: content, shape: shape)
     }
 
     @ViewBuilder

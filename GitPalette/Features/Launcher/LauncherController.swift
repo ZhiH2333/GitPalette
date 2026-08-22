@@ -326,6 +326,7 @@ final class LauncherController {
         let size: NSSize = LauncherPanelFactory.panelSize
         hostingView?.frame = NSRect(origin: .zero, size: size)
         panel.setContentSize(size)
+        panel.invalidateShadow()
     }
 
     /// 将已显示面板置前并刷新焦点。

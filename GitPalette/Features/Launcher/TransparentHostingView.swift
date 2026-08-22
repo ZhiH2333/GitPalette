@@ -47,10 +47,14 @@ final class TransparentHostingView: NSHostingView<AnyView> {
         executeConfigureClearBackground()
     }
 
-    /// 清除默认背景与不透明标记。
+    /// 清除默认背景与不透明标记，并按圆角裁切，供系统阴影跟随轮廓。
     private func executeConfigureClearBackground() {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
         layer?.isOpaque = false
+        layer?.cornerRadius = LauncherChrome.cornerRadius
+        layer?.cornerCurve = .continuous
+        layer?.masksToBounds = true
+        window?.invalidateShadow()
     }
 }

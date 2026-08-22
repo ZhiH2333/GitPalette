@@ -15,15 +15,9 @@ enum LauncherChrome {
     static let contentWidth: CGFloat = 640
     /// 内容高度
     static let contentHeight: CGFloat = 440
-    /// 阴影外扩（需盖住远距 blur，圆角外保持透明）
-    static let shadowBleed: CGFloat = 44
-    /// 远距阴影模糊半径
-    static let shadowFarBlur: CGFloat = 34
-    /// 近距接触阴影模糊半径
-    static let shadowNearBlur: CGFloat = 12
-    /// Hosting / Panel 外框（含阴影边距）
-    static let panelWidth: CGFloat = contentWidth + shadowBleed * 2
-    static let panelHeight: CGFloat = contentHeight + shadowBleed * 2
+    /// Hosting / Panel 外框（阴影由系统窗口绘制，不计入尺寸）
+    static let panelWidth: CGFloat = contentWidth
+    static let panelHeight: CGFloat = contentHeight
     /// 搜索行高度
     static let searchRowMinHeight: CGFloat = 58
     /// 搜索放大镜字号

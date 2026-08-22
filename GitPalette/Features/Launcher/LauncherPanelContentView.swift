@@ -30,8 +30,7 @@ struct LauncherPanelContentView: View {
             onRequestComplete: onRequestComplete
         )
         .applyLauncherGlassShell(style: appConfig.appearanceStyle)
-        // 仅留阴影绘制空间；根必须全透明，否则圆角外会出现方形遮罩。
-        .padding(LauncherChrome.shadowBleed)
+        .frame(width: LauncherChrome.contentWidth, height: LauncherChrome.contentHeight)
         .background(Color.clear)
     }
 }
