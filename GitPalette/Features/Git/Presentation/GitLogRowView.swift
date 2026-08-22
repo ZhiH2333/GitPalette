@@ -25,7 +25,7 @@ struct GitLogRowView: View {
                     .lineLimit(1)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.subject.isEmpty ? " " : entry.subject)
+                Text(entry.subject.isEmpty ? " " : GitmojiShortcodeRenderer.executeRender(entry.subject))
                     .font(.body.weight(.medium))
                     .lineLimit(1)
                 if let decorations: String = entry.decorations, !decorations.isEmpty {

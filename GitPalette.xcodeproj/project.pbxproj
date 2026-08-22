@@ -10,8 +10,18 @@
 		A1B2C3D43024512F00HOTKEY01 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D43024512F00HOTKEY02 /* KeyboardShortcuts */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		20EC3C703024513000TEST0B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 20EC3C563024512F00DEF2D4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 20EC3C5D3024512F00DEF2D4;
+			remoteInfo = GitPalette;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		20EC3C5E3024512F00DEF2D4 /* GitPalette.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GitPalette.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20EC3C5E3024512F00DEF2D4 /* GitPalette.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = GitPalette.app; path = "GitPalette-Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		20EC3C703024513000TEST01 /* GitPaletteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GitPaletteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -186,17 +196,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-
-/* Begin PBXContainerItemProxy section */
-		20EC3C703024513000TEST0B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 20EC3C563024512F00DEF2D4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 20EC3C5D3024512F00DEF2D4;
-			remoteInfo = GitPalette;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
 		20EC3C703024513000TEST0A /* PBXTargetDependency */ = {
@@ -392,7 +391,6 @@
 			};
 			name = Release;
 		};
-
 		20EC3C703024513000TEST07 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -464,7 +462,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-
 		20EC3C703024513000TEST09 /* Build configuration list for PBXNativeTarget "GitPaletteTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
