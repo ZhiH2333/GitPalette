@@ -10,35 +10,20 @@ import Combine
 import Foundation
 import KeyboardShortcuts
 
-/// 撤销辅助功能后的 UI 反馈。
-enum AccessibilityRevokeFeedback: Equatable, Sendable {
-    case succeeded
-    case failed
-}
-
 /// 全局热键服务。
 @MainActor
 final class HotKeyService: ObservableObject {
-    private static let didShowGuideKey: String = "gitpalette.didShowAccessibilityGuide"
-
-    /// 是否已授予辅助功能权限
+    /// 是否已授予辅助功能权限（仅用于抢焦点，不挡住热键）。
     @Published private(set) var isAccessibilityGranted: Bool = false
-    /// 热键与系统快捷键冲突时的中文提示；无冲突为 nil
+    /// 热键与系统快捷键冲突时的提示；无冲突为 nil
     @Published private(set) var conflictHint: String?
     /// 当前热键展示文案
     @Published private(set) var hotkeyDisplayText: String = HotKeyDefaults.displayText
-    /// 变化时 UI 应打开权限引导窗
+    /// 变化时 UI 应打开权限说明窗（设置 / 命令入口）。
     @Published private(set) var permissionGuideToken: UUID?
-    /// 最近一次撤销操作反馈
-    @Published private(set) var accessibilityRevokeFeedback: AccessibilityRevokeFeedback?
     private let accessibilityService: AccessibilityPermissionService
     private var onToggle: (() -> Void)?
     private var didRegisterHandler: Bool = false
-
-    /// 当前 Bundle ID（Debug / Release 不同）。
-    var accessibilityBundleID: String {
-        accessibilityService.currentBundleID
-    }
 
     init(accessibilityService: AccessibilityPermissionService = AccessibilityPermissionService()) {
         self.accessibilityService = accessibilityService
@@ -48,7 +33,6 @@ final class HotKeyService: ObservableObject {
     /// 启动热键监听；触发时回调（应接到 LauncherController.toggle）。
     func executeStart(onToggle: @escaping () -> Void) {
         self.onToggle = onToggle
-        executeRefreshStatus()
         executeEnsureHandlerRegistered()
         executeRefreshStatus()
         executePresentGuideIfNeededOnLaunch()
@@ -61,53 +45,30 @@ final class HotKeyService: ObservableObject {
         executeUpdateConflictHint()
     }
 
-    /// 主动打开权限引导（菜单入口）。
+    /// 打开辅助功能说明（设置或「/permissions」）。
     func executePresentPermissionGuide() {
         executeRefreshStatus()
         permissionGuideToken = UUID()
     }
 
-    /// 请求辅助功能授权提示。
-    func executeRequestAccessibilityAccess() {
-        accessibilityService.executePromptIfNeeded()
-        executeRefreshStatus()
-    }
-
-    /// 请求权限并打开系统辅助功能设置页。
+    /// 打开系统辅助功能设置页。
     func executeOpenAccessibilitySettings() {
         accessibilityService.executeRequestAccessAndOpenSettings()
         executeRefreshStatus()
     }
 
-    /// 撤销辅助功能授权（清 Debug + Release TCC），并提示重启后重新授权。
-    func executeRevokeAccessibilityAccess() {
-        let result: AccessibilityRevokeResult = accessibilityService.executeRevokeAccessibilityAccess()
-        UserDefaults.standard.set(false, forKey: Self.didShowGuideKey)
-        executeRefreshStatus()
-        accessibilityRevokeFeedback = result.didSucceed ? .succeeded : .failed
-    }
-
-    /// 清除撤销结果提示。
-    func executeClearAccessibilityRevokeFeedback() {
-        accessibilityRevokeFeedback = nil
+    /// 冷启动时若当前进程未被信任，弹出简短说明（不挡住热键）。
+    private func executePresentGuideIfNeededOnLaunch() {
+        guard !isAccessibilityGranted else {
+            return
+        }
+        permissionGuideToken = UUID()
     }
 
     /// 重置为默认热键 ⌘⇧G。
     func executeResetToDefaultShortcut() {
         KeyboardShortcuts.reset(.toggleLauncher)
         executeRefreshStatus()
-    }
-
-    /// 首次启动且无权限时弹出引导（不静默失败）。
-    private func executePresentGuideIfNeededOnLaunch() {
-        guard !isAccessibilityGranted else {
-            return
-        }
-        guard !UserDefaults.standard.bool(forKey: Self.didShowGuideKey) else {
-            return
-        }
-        UserDefaults.standard.set(true, forKey: Self.didShowGuideKey)
-        permissionGuideToken = UUID()
     }
 
     /// 注册 onKeyUp 处理器（只注册一次）。
@@ -123,13 +84,8 @@ final class HotKeyService: ObservableObject {
         }
     }
 
-    /// 热键触发：无权限则弹出引导；有权限则 toggle。
+    /// 热键始终唤起启动器。
     private func executeHandleHotKey() {
-        executeRefreshStatus()
-        guard isAccessibilityGranted else {
-            permissionGuideToken = UUID()
-            return
-        }
         onToggle?()
     }
 

@@ -52,9 +52,12 @@ private struct WindowAccessor: NSViewRepresentable {
 
 extension View {
     /// 窗口首次显示时激活应用并成为 key；消失后尝试恢复 LSUIElement。
-    func applyWindowForegroundFocus() -> some View {
+    func applyWindowForegroundFocus(identifier: String? = nil) -> some View {
         background(
             WindowAccessor { window in
+                if let identifier {
+                    window.identifier = NSUserInterfaceItemIdentifier(identifier)
+                }
                 AppWindowFocus.executeFocusHostingWindow(of: window.contentView)
             }
         )

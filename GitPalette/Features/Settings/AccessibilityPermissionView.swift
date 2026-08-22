@@ -2,73 +2,58 @@
 //  AccessibilityPermissionView.swift
 //  GitPalette
 //
-//  辅助功能权限引导。
+//  辅助功能说明窗口。
 //
 
+import AppKit
 import SwiftUI
 
-/// 辅助功能权限引导视图。
+/// 辅助功能说明视图。
 struct AccessibilityPermissionView: View {
     @ObservedObject var preferences: PreferencesStore
     @ObservedObject var hotKeyService: HotKeyService
     var onDismiss: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(preferences.t(.needAccessibilityTitle))
-                .font(.title2.weight(.semibold))
-            Text(
-                preferences.t(.needAccessibilityBody)
-                    .replacingOccurrences(of: "GitPalette", with: preferences.appName)
-            )
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            if let conflictHint: String = hotKeyService.conflictHint {
-                Text(conflictHint)
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: 16) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 64, height: 64)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(preferences.t(.needAccessibilityTitle))
+                        .font(.title3.weight(.semibold))
+                    Text(preferences.t(.needAccessibilityBody))
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            if let feedback: AccessibilityRevokeFeedback = hotKeyService.accessibilityRevokeFeedback {
-                Text(resolveRevokeMessage(feedback))
-                    .font(.caption)
-                    .foregroundStyle(feedback == .succeeded ? Color.secondary : Color.orange)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            HStack {
-                Button(preferences.t(.grantAccessibility)) {
+            .padding(.bottom, 20)
+            HStack(spacing: 12) {
+                Spacer()
+                Button(preferences.t(.later)) {
+                    executeDismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                Button(preferences.t(.openSystemSettings)) {
                     hotKeyService.executeOpenAccessibilitySettings()
                 }
                 .keyboardShortcut(.defaultAction)
-                Button(preferences.t(.revokeAccessibility)) {
-                    hotKeyService.executeRevokeAccessibilityAccess()
-                }
-                Button(preferences.t(.recheck)) {
-                    hotKeyService.executeRefreshStatus()
-                }
-                Spacer()
-                if let onDismiss {
-                    Button(preferences.t(.later)) {
-                        onDismiss()
-                    }
-                }
             }
         }
-        .padding(20)
-        .frame(width: 420)
-        .onAppear {
-            hotKeyService.executeRequestAccessibilityAccess()
-            hotKeyService.executeRefreshStatus()
-        }
+        .padding(24)
+        .frame(width: 460)
     }
 
-    /// 撤销结果文案。
-    private func resolveRevokeMessage(_ feedback: AccessibilityRevokeFeedback) -> String {
-        switch feedback {
-        case .succeeded:
-            return preferences.t(.accessibilityRevokeSucceeded)
-        case .failed:
-            return preferences.t(.accessibilityRevokeFailed)
+    private func executeDismiss() {
+        if let onDismiss {
+            onDismiss()
+        } else {
+            dismiss()
         }
     }
 }

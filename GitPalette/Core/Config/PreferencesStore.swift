@@ -57,7 +57,7 @@ final class PreferencesStore: ObservableObject {
     }
 
     init(
-        appName: String = "GitPalette",
+        appName: String = PreferencesStore.resolveAppDisplayName(),
         defaultHotkeyPlaceholder: String = HotKeyDefaults.displayText,
         gitmojiAPIURL: String = "https://gitmoji.dev/api/gitmojis"
     ) {
@@ -165,6 +165,20 @@ final class PreferencesStore: ObservableObject {
             return .menu
         }
         return MenuBarClickBehavior(rawValue: raw) ?? .menu
+    }
+
+    /// 与系统设置辅助功能列表一致的显示名（Debug 为 GitPalette - Debug）。
+    static func resolveAppDisplayName() -> String {
+        let bundle: Bundle = .main
+        if let displayName: String = bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
+           !displayName.isEmpty {
+            return displayName
+        }
+        if let bundleName: String = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String,
+           !bundleName.isEmpty {
+            return bundleName
+        }
+        return "GitPalette"
     }
 
     private static func executeLoadCopyFormat() -> CopyFormat {

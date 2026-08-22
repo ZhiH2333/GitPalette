@@ -66,7 +66,7 @@ struct GitPaletteApp: App {
                 preferences: preferences,
                 hotKeyService: hotKeyService
             )
-            .applyWindowForegroundFocus()
+            .applyWindowForegroundFocus(identifier: AppWindowID.accessibilityPermission)
         }
         .windowResizability(.contentSize)
         Window(preferences.t(.about) + preferences.appName, id: AppWindowID.about) {

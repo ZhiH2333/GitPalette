@@ -19,6 +19,21 @@ enum AppWindowFocus {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// 按窗口 identifier 前置（比标题子串可靠）。
+    static func executeBringToFront(identifier: String) {
+        executePrepareForWindowPresentation()
+        executeScheduleBringToFront { window in
+            window.identifier?.rawValue == identifier
+        }
+    }
+
+    /// 关闭匹配 identifier 的窗口。
+    static func executeCloseWindows(identifier: String) {
+        for window in NSApp.windows where window.identifier?.rawValue == identifier {
+            window.close()
+        }
+    }
+
     /// 将匹配标题的可见窗口置前并成为 key。
     static func executeBringToFront(titleContaining fragments: [String]) {
         executePrepareForWindowPresentation()

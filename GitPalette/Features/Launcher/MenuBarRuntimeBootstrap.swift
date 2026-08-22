@@ -60,9 +60,7 @@ struct MenuBarRuntimeBootstrap: View {
                 DispatchQueue.main.async {
                     AppWindowFocus.executePrepareForWindowPresentation()
                     openWindow(id: AppWindowID.accessibilityPermission)
-                    AppWindowFocus.executeBringToFront(
-                        titleContaining: ["辅助功能", "Accessibility", "权限"]
-                    )
+                    AppWindowFocus.executeBringToFront(identifier: AppWindowID.accessibilityPermission)
                 }
             }
         )
@@ -78,10 +76,7 @@ struct MenuBarRuntimeBootstrap: View {
         hotKeyService.executeStart {
             launcherController.toggle()
         }
-        hotKeyService.executeRefreshStatus()
-        executeCloseAccessibilityWindows()
-        if !hotKeyService.isAccessibilityGranted,
-           hotKeyService.permissionGuideToken != nil {
+        if hotKeyService.permissionGuideToken != nil {
             executeOpenAccessibilityWindow()
         }
     }
@@ -93,22 +88,12 @@ struct MenuBarRuntimeBootstrap: View {
         DispatchQueue.main.async {
             AppWindowFocus.executePrepareForWindowPresentation()
             openWindow(id: AppWindowID.accessibilityPermission)
-            AppWindowFocus.executeBringToFront(
-                titleContaining: ["辅助功能", "Accessibility", "权限"]
-            )
+            AppWindowFocus.executeBringToFront(identifier: AppWindowID.accessibilityPermission)
         }
     }
 
     private func executeCloseAccessibilityWindows() {
-        for window in NSApp.windows {
-            let title: String = window.title
-            let isAccessibilityWindow: Bool =
-                title.contains("辅助功能")
-                || title.localizedCaseInsensitiveContains("Accessibility")
-            if isAccessibilityWindow {
-                window.close()
-            }
-        }
+        AppWindowFocus.executeCloseWindows(identifier: AppWindowID.accessibilityPermission)
     }
 }
 

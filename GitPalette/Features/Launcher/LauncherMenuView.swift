@@ -20,12 +20,6 @@ struct LauncherMenuView: View {
         Button(preferences.t(.openLauncher)) {
             executeOpenLauncher()
         }
-        if !hotKeyService.isAccessibilityGranted {
-            Button(preferences.t(.grantAccessibility)) {
-                hotKeyService.executePresentPermissionGuide()
-                executeOpenAccessibilityWindow()
-            }
-        }
         Divider()
         Menu(preferences.t(.copyFormatMenu)) {
             ForEach(CopyFormat.allCases) { format in
@@ -82,9 +76,7 @@ struct LauncherMenuView: View {
         DispatchQueue.main.async {
             AppWindowFocus.executePrepareForWindowPresentation()
             openWindow(id: AppWindowID.accessibilityPermission)
-            AppWindowFocus.executeBringToFront(
-                titleContaining: ["辅助功能", "Accessibility", "权限"]
-            )
+            AppWindowFocus.executeBringToFront(identifier: AppWindowID.accessibilityPermission)
         }
     }
 

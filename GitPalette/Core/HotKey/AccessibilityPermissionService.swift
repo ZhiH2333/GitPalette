@@ -31,7 +31,11 @@ final class AccessibilityPermissionService {
 
     /// 当前进程是否已获辅助功能信任。
     var isTrusted: Bool {
-        AXIsProcessTrusted()
+        let options: NSDictionary = [Self.trustedCheckPromptKey: false]
+        if AXIsProcessTrustedWithOptions(options) {
+            return true
+        }
+        return AXIsProcessTrusted()
     }
 
     /// 当前运行实例的 Bundle ID。
@@ -39,11 +43,16 @@ final class AccessibilityPermissionService {
         Bundle.main.bundleIdentifier ?? Self.releaseBundleID
     }
 
+    /// 当前 `.app` 路径，便于在系统设置中核对勾选的是哪一份。
+    var currentBundlePath: String {
+        Bundle.main.bundlePath
+    }
+
     /// 弹出系统权限提示，并让本 App 出现在「辅助功能」列表中。
     /// - Returns: 当前是否已授权。
     @discardableResult
     func executePromptIfNeeded() -> Bool {
-        if AXIsProcessTrusted() {
+        if isTrusted {
             return true
         }
         // 必须用 NSNumber / CFBoolean；纯 Bool 桥接在部分 SDK 下不会触发弹窗与列表注册。
@@ -57,28 +66,21 @@ final class AccessibilityPermissionService {
         executeOpenAccessibilitySettings()
     }
 
-    /// 撤销本 App（Debug + Release）在辅助功能中的授权记录。
-    ///
-    /// Debug 与 Archive 签名/路径不同；共用同一 Bundle ID 时 TCC 会互相弄脏。
-    /// 撤销时同时清掉 debug / release 两条，避免「Archive 授权后 Debug 也挂」。
+    /// 尝试撤销当前实例授权；失败时打开系统设置供手动关掉开关。
     func executeRevokeAccessibilityAccess() -> AccessibilityRevokeResult {
-        let targets: [String] = [
-            Self.releaseBundleID,
-            Self.debugBundleID,
-            currentBundleID
-        ]
-        let uniqueTargets: [String] = Array(Set(targets)).sorted()
+        let uniqueTargets: [String] = [currentBundleID]
         var didSucceed: Bool = false
         for bundleID in uniqueTargets {
             if executeRunTccutilReset(bundleID: bundleID) {
                 didSucceed = true
             }
         }
+        if !didSucceed {
+            executeOpenAccessibilitySettings()
+        }
         let command: String = uniqueTargets
             .map { "tccutil reset Accessibility \($0)" }
             .joined(separator: "\n")
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(command, forType: .string)
         return AccessibilityRevokeResult(
             didSucceed: didSucceed,
             bundleIDs: uniqueTargets,

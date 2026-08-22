@@ -77,6 +77,13 @@ enum L10nKey: String, Sendable {
     case clear
     case needAccessibilityTitle
     case needAccessibilityBody
+    case accessibilityStepOpenSettings
+    case accessibilityStepEnableToggle
+    case accessibilityStepReturn
+    case accessibilityInstanceLabel
+    case accessibilityRelaunchHint
+    case quitAndRelaunch
+    case accessibilityRevokeUseSettings
     case later
     case styleAutomatic
     case styleLiquidGlass
@@ -225,11 +232,11 @@ enum L10n {
         .currentHotKey: "Current: ",
         .resetDefaultHotKey: "Reset to default (%@)",
         .sectionAccessibility: "Accessibility",
-        .accessibilityGranted: "Granted",
-        .accessibilityDenied: "Not granted: the global hotkey may not work when another app is frontmost",
+        .accessibilityGranted: "Enabled",
+        .accessibilityDenied: "Not enabled",
         .revokeAccessibility: "Revoke Accessibility…",
         .accessibilityRevokeSucceeded: "Accessibility permission cleared. Quit and reopen the app, then grant Accessibility again.",
-        .accessibilityRevokeFailed: "Could not clear automatically. Terminal commands were copied — paste them in Terminal, then quit and reopen the app to grant Accessibility again.",
+        .accessibilityRevokeFailed: "Could not clear from the app. In System Settings → Privacy & Security → Accessibility, turn the switch off for this copy (or use − to remove it). tccutil often fails on current macOS.",
         .openSystemSettings: "Open System Settings…",
         .recheck: "Recheck",
         .menuBarAssistant: "Menu bar Gitmoji assistant",
@@ -263,9 +270,16 @@ enum L10n {
         .commandHint: "Tab / → complete · ↑↓ select · ⏎ run",
         .commandSearchPlaceholder: "Type a command, Tab / → to complete…",
         .clear: "Clear",
-        .needAccessibilityTitle: "Accessibility required",
-        .needAccessibilityBody: "The global hotkey needs GitPalette allowed in System Settings → Privacy & Security → Accessibility so it can open the launcher while other apps are frontmost.",
-        .later: "Later",
+        .needAccessibilityTitle: "Accessibility Access",
+        .needAccessibilityBody: "Accessibility access allows GitPalette to receive keyboard focus when another application is in the foreground. The global shortcut can open the launcher without this permission.",
+        .accessibilityStepOpenSettings: "Click Open System Settings. macOS will list this app under Accessibility.",
+        .accessibilityStepEnableToggle: "Find “%@” and turn the switch on. Debug and Release are separate entries.",
+        .accessibilityStepReturn: "Click Quit & Relaunch. macOS usually will not report the new grant until this process fully exits.",
+        .accessibilityInstanceLabel: "This copy: %@\n%@\n%@",
+        .accessibilityRelaunchHint: "If the switch is already on, click Quit & Relaunch. Xcode Rebuild often keeps the old process, so AXIsProcessTrusted stays false.",
+        .quitAndRelaunch: "Quit & Relaunch",
+        .accessibilityRevokeUseSettings: "Turn the switch off in System Settings, then Quit & Relaunch. Per-app tccutil reset often fails on current macOS.",
+        .later: "Not Now",
         .styleAutomatic: "Automatic",
         .styleLiquidGlass: "Liquid Glass",
         .styleMaterial: "Frosted glass",
@@ -399,12 +413,12 @@ enum L10n {
         .toggleLauncher: "唤起 / 关闭启动器",
         .currentHotKey: "当前：",
         .resetDefaultHotKey: "恢复默认（%@）",
-        .sectionAccessibility: "辅助功能权限",
-        .accessibilityGranted: "已授予",
-        .accessibilityDenied: "未授予：其他 App 前台时全局热键可能无法使用",
+        .sectionAccessibility: "辅助功能",
+        .accessibilityGranted: "已启用",
+        .accessibilityDenied: "未启用",
         .revokeAccessibility: "撤销辅助功能权限…",
         .accessibilityRevokeSucceeded: "已清除辅助功能授权。请退出并重新打开应用，再重新授予辅助功能权限。",
-        .accessibilityRevokeFailed: "无法自动清除。已复制终端命令到剪贴板，请先在「终端」执行，然后退出并重新打开应用，再重新授权。",
+        .accessibilityRevokeFailed: "应用内无法自动清除。请到「系统设置 → 隐私与安全性 → 辅助功能」关掉这份的开关（或用 − 删除）。当前 macOS 上 tccutil 经常失败，不必用终端。",
         .openSystemSettings: "打开系统设置…",
         .recheck: "重新检测",
         .menuBarAssistant: "菜单栏 Gitmoji 助手",
@@ -438,9 +452,16 @@ enum L10n {
         .commandHint: "Tab / → 补全 · ↑↓ 选择 · ⏎ 执行",
         .commandSearchPlaceholder: "输入命令，Tab / → 补全…",
         .clear: "清除",
-        .needAccessibilityTitle: "需要辅助功能权限",
-        .needAccessibilityBody: "全局热键需要在「系统设置 → 隐私与安全性 → 辅助功能」中允许 GitPalette，才能在其他应用前台时唤起启动器。",
-        .later: "稍后",
+        .needAccessibilityTitle: "辅助功能权限",
+        .needAccessibilityBody: "授予辅助功能权限后，GitPalette 可在其他应用程序位于前台时获得键盘焦点。全局快捷键无需此项权限即可打开启动器。",
+        .accessibilityStepOpenSettings: "点「打开系统设置」。系统会把当前这个 App 登记到辅助功能列表。",
+        .accessibilityStepEnableToggle: "在列表中找到「%@」并打开开关。调试版与正式版是两条独立记录。",
+        .accessibilityStepReturn: "点「退出并重新打开」。系统通常要等当前进程彻底退出后，才会把新授权告诉这个 App。",
+        .accessibilityInstanceLabel: "当前这份：%@\n%@\n%@",
+        .accessibilityRelaunchHint: "若开关已经打开，请点「退出并重新打开」。Xcode Rebuild 常常不会结束旧进程，所以仍会显示未授予。",
+        .quitAndRelaunch: "退出并重新打开",
+        .accessibilityRevokeUseSettings: "请在系统设置里关掉开关，再点「退出并重新打开」。指定 App 的 tccutil reset 在当前 macOS 上经常失败。",
+        .later: "暂不授予",
         .styleAutomatic: "自动",
         .styleLiquidGlass: "液态玻璃",
         .styleMaterial: "毛玻璃",
