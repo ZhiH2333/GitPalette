@@ -120,9 +120,33 @@ enum GitSubcommand: Equatable, Sendable {
         return subcommandSplit.head.lowercased()
     }
 
-    /// 查询是否已进入 /git commit（含后续消息）。
+    /// 查询是否已进入 /git commit 预览：须在 commit 后跟空格（回车执行另走 confirm）。
     static func executeIsCommitQuery(_ query: String) -> Bool {
-        executeGitSubcommandHead(query) == "commit"
+        guard executeGitSubcommandHead(query) == "commit" else {
+            return false
+        }
+        return executeHasWhitespaceAfterSubcommand(query, subcommand: "commit")
+    }
+
+    /// 子命令 token 之后是否已有空白分隔（不含仅写完单词）。
+    private static func executeHasWhitespaceAfterSubcommand(
+        _ query: String,
+        subcommand: String
+    ) -> Bool {
+        let lower: String = query.lowercased()
+        guard let gitRange: Range<String.Index> = lower.range(of: "/git") else {
+            return false
+        }
+        let afterGit: Substring = lower[gitRange.upperBound...]
+            .drop(while: { $0.isWhitespace })
+        guard afterGit.hasPrefix(subcommand) else {
+            return false
+        }
+        let afterSubcommand: Substring = afterGit.dropFirst(subcommand.count)
+        guard let first: Character = afterSubcommand.first else {
+            return false
+        }
+        return first.isWhitespace
     }
 
     /// 拆分子命令 token 与剩余参数。

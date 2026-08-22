@@ -74,6 +74,8 @@ final class GitSubcommandTests: XCTestCase {
         XCTAssertFalse(GitSubcommand.executeIsGitQuery("git status"))
         XCTAssertEqual(GitSubcommand.executeGitSubcommandHead("/git commit hello"), "commit")
         XCTAssertTrue(GitSubcommand.executeIsCommitQuery("/git commit hello"))
+        XCTAssertTrue(GitSubcommand.executeIsCommitQuery("/git commit "))
+        XCTAssertFalse(GitSubcommand.executeIsCommitQuery("/git commit"))
         XCTAssertFalse(GitSubcommand.executeIsCommitQuery("/git status"))
     }
 

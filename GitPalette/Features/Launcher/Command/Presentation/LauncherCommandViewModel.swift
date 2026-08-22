@@ -154,7 +154,8 @@ final class LauncherCommandViewModel: ObservableObject {
     /// 同步 query 并刷新建议。
     func executeUpdateQuery(_ query: String) {
         let isCommitQuery: Bool = GitSubcommand.executeIsCommitQuery(query)
-        let keepCommitLog: Bool = isCommitQuery && gitResultViewModel?.kind == .commit
+        let keepCommitLog: Bool = gitResultViewModel?.kind == .commit
+            && GitSubcommand.executeGitSubcommandHead(query) == "commit"
         if query != latestQuery && !keepCommitLog {
             gitResultViewModel = nil
         }
