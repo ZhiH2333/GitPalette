@@ -61,7 +61,7 @@ struct AboutView: View {
         ) as? String ?? "1.1.0"
         let buildVersion: String = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleVersion"
-        ) as? String ?? "1"
+        ) as? String ?? "3"
         return String(
             format: preferences.t(.versionFormat),
             shortVersion,
