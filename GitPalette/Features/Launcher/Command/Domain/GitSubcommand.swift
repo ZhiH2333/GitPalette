@@ -128,6 +128,11 @@ enum GitSubcommand: Equatable, Sendable {
         return executeHasWhitespaceAfterSubcommand(query, subcommand: "commit")
     }
 
+    /// 已锁定为 commit 说明文本：禁止用说明里的词去匹配其它子命令。
+    static func executeIsCommitMessageLocked(_ query: String) -> Bool {
+        executeGitSubcommandHead(query) == "commit"
+    }
+
     /// 子命令 token 之后是否已有空白分隔（不含仅写完单词）。
     private static func executeHasWhitespaceAfterSubcommand(
         _ query: String,

@@ -274,7 +274,8 @@ enum CommandSuggestionEngine {
                 linkedRepositories: linkedRepositories
             )
         }
-        if head == "commit" {
+        // commit / status / add / repos / link 在已有后续文本时不再用关键词匹配其它子命令。
+        if head == "commit" || (!split.rest.isEmpty && Self.executeIsLeafGitSubcommand(head)) {
             return []
         }
         let candidates: [(value: String, summary: String)] = [
@@ -343,6 +344,16 @@ enum CommandSuggestionEngine {
             return "\"" + value + "\""
         }
         return value
+    }
+
+    /// 不再接受后续参数的 git 子命令。
+    private static func executeIsLeafGitSubcommand(_ head: String) -> Bool {
+        switch head {
+        case "commit", "status", "add", "repos", "link":
+            return true
+        default:
+            return false
+        }
     }
 
     /// 拆分首个参数 token 与剩余文本。

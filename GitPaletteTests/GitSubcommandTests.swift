@@ -77,6 +77,9 @@ final class GitSubcommandTests: XCTestCase {
         XCTAssertTrue(GitSubcommand.executeIsCommitQuery("/git commit "))
         XCTAssertFalse(GitSubcommand.executeIsCommitQuery("/git commit"))
         XCTAssertFalse(GitSubcommand.executeIsCommitQuery("/git status"))
+        XCTAssertTrue(GitSubcommand.executeIsCommitMessageLocked("/git commit"))
+        XCTAssertTrue(GitSubcommand.executeIsCommitMessageLocked("/git commit add files"))
+        XCTAssertFalse(GitSubcommand.executeIsCommitMessageLocked("/git add"))
     }
 
     @MainActor

@@ -63,6 +63,31 @@ final class CommandSuggestionEngineTests: XCTestCase {
     }
 
     @MainActor
+    func testCommitMessageKeywordsDoNotSuggestOtherGitSubcommands() {
+        let queries = [
+            "/git commit add files",
+            "/git commit status",
+            "/git commit fix link",
+            "/git commit repos"
+        ]
+        for query in queries {
+            let suggestions = CommandSuggestionEngine.resolveSuggestions(
+                for: query,
+                language: .english
+            )
+            XCTAssertEqual(suggestions, [], query)
+            XCTAssertNil(
+                CommandSuggestionEngine.resolveBestCompletion(
+                    for: query,
+                    selectedIndex: 0,
+                    language: .english
+                ),
+                query
+            )
+        }
+    }
+
+    @MainActor
     func testBestCompletionForGitPrefix() {
         let completion = CommandSuggestionEngine.resolveBestCompletion(
             for: "/gi",

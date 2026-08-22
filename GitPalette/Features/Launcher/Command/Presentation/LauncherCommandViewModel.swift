@@ -61,6 +61,9 @@ final class LauncherCommandViewModel: ObservableObject {
         guard isCommandMode else {
             return ""
         }
+        if GitSubcommand.executeIsCommitQuery(query) {
+            return ""
+        }
         if let typeGhost: String = resolveArgumentTypeGhost(for: query) {
             return typeGhost
         }
@@ -171,10 +174,13 @@ final class LauncherCommandViewModel: ObservableObject {
         if isCommitQuery && gitResultViewModel == nil {
             gitResultViewModel = executor.executeMakeCommitLogViewModel()
         }
-        // ↑↓ 回填补全：保留当前建议列表与 selectedIndex，避免收窄后无法切回。
+        // ↑↓ 回填补全：仅当输入仍等于刚写入的补全时跳过重建；用户继续打字则立即刷新。
         if shouldSkipNextSuggestionRefresh {
             shouldSkipNextSuggestionRefresh = false
-            return
+            if suggestions.indices.contains(selectedIndex),
+               query == suggestions[selectedIndex].completionText {
+                return
+            }
         }
         suggestions = CommandSuggestionEngine.resolveSuggestions(
             for: query,
@@ -187,6 +193,9 @@ final class LauncherCommandViewModel: ObservableObject {
     /// Tab：补全当前选中候选，返回新 query；无候选返回 nil。
     func executeComplete(query: String) -> String? {
         guard parseResult.isCommandMode else {
+            return nil
+        }
+        if GitSubcommand.executeIsCommitMessageLocked(query) {
             return nil
         }
         guard let completed: String =
@@ -207,6 +216,9 @@ final class LauncherCommandViewModel: ObservableObject {
 
     /// ↑ 选中上一项，并返回应写入输入框的补全文本。
     func executeSelectPrevious() -> String? {
+        if GitSubcommand.executeIsCommitQuery(latestQuery) {
+            return nil
+        }
         guard !suggestions.isEmpty else {
             return nil
         }
@@ -216,6 +228,9 @@ final class LauncherCommandViewModel: ObservableObject {
 
     /// ↓ 选中下一项，并返回应写入输入框的补全文本。
     func executeSelectNext() -> String? {
+        if GitSubcommand.executeIsCommitQuery(latestQuery) {
+            return nil
+        }
         guard !suggestions.isEmpty else {
             return nil
         }
@@ -245,6 +260,9 @@ final class LauncherCommandViewModel: ObservableObject {
         let queryResult: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(query, language: hintLanguage)
         if queryResult.isExecutable {
+            return executeRunParseResult(queryResult)
+        }
+        if GitSubcommand.executeIsCommitMessageLocked(query) {
             return executeRunParseResult(queryResult)
         }
         if let selectedOutcome: LauncherCommandExecutionOutcome =
@@ -314,6 +332,9 @@ final class LauncherCommandViewModel: ObservableObject {
         let completedQuery: String = suggestion.completionText
         let completedParse: LauncherCommandParseResult =
             LauncherCommandParser.executeParse(completedQuery, language: hintLanguage)
+        if GitSubcommand.executeIsCommitMessageLocked(currentQuery) {
+            return nil
+        }
         if completedParse.isExecutable {
             applyCompletion(completedQuery)
             executeUpdateQuery(completedQuery)
