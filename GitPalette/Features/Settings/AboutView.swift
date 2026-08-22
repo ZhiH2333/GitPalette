@@ -58,7 +58,7 @@ struct AboutView: View {
     private func resolveVersionLine() -> String {
         let shortVersion: String = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "1.0.1"
+        ) as? String ?? "1.1.0"
         let buildVersion: String = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleVersion"
         ) as? String ?? "1"
