@@ -11,10 +11,10 @@ import Foundation
 /// 菜单栏 Agent 的窗口前置与激活辅助。
 @MainActor
 enum AppWindowFocus {
-    /// 打开普通窗口前：临时切到 regular 并激活，避免被其他 App 挡住。
+    /// 打开窗口前激活，但保持 accessory，避免出现在 Dock。
     static func executePrepareForWindowPresentation() {
-        if NSApp.activationPolicy() != .regular {
-            NSApp.setActivationPolicy(.regular)
+        if NSApp.activationPolicy() != .accessory {
+            NSApp.setActivationPolicy(.accessory)
         }
         NSApp.activate(ignoringOtherApps: true)
     }
