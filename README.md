@@ -18,7 +18,7 @@ Gitmoji data is bundled from [gitmoji.dev](https://gitmoji.dev/).
 
 ## Requirements
 
-macOS 13.0+ · Xcode 15+
+macOS 13.0+, Xcode 15+
 
 ## License
 
